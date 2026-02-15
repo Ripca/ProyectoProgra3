@@ -117,10 +117,10 @@ class IDCardGenerator:
         c.drawString(text_x, info_y - 3.5*mm, codigo_carnet)
         c.drawString(text_x + 25*mm, info_y - 3.5*mm, dpi)
 
-        # 6. QR Code (Bottom Right)
+        # 6. QR Code (Moved to Top Right - Optimized)
         qr_size = 14 * mm
         qr_x = card_width - qr_size - 4 * mm
-        qr_y = 12 * mm # Moved up significantly (was 3mm)
+        qr_y = 20 * mm # Balanced position (was 25mm, too high)
         
         qr_content = qr_data if qr_data else codigo_carnet
         
