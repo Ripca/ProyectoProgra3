@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema Biométrico UMG{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="card-title fw-bold">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </h3>
+                        <p class="text-muted mb-0">
+                            Bienvenido/a, {{ session.get('nombre') }} {{ session.get('apellido') }}
+                        </p>
+                    </div>
+                    {% if session.get('role') == 'catedratico' or session.get('role') == 'admin' %}
+                    <a href="{{ url_for('registro_facial') }}" class="btn btn-success btn-lg shadow-sm">
+                        <i class="bi bi-person-plus-fill"></i> Registrar Alumno
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-4 fw-bold text-secondary">
+            <i class="bi bi-journal-bookmark-fill"></i> Mis Cursos
+        </h4>
+    </div>
+</div>
+
+{% if cursos %}
+<div class="row">
+    {% for curso in cursos %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 student-card">
+            <div class="card-body">
+                <h5 class="card-title">{{ curso.nombre }}</h5>
+                <p class="card-text">
+                    <strong>Código:</strong> {{ curso.codigo }}<br>
+                    <strong>Salón:</strong> {{ curso.salon or 'No asignado' }}<br>
+                    <strong>Horario:</strong> {{ curso.horario or 'No especificado' }}
+                </p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('ver_asistencia', curso_id=curso.id) }}" class="btn btn-primary w-100">
+                    <i class="bi bi-clipboard-check"></i> Ver Asistencia
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No tiene cursos asignados actualmente.
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

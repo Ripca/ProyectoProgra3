@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Asistencia - {{ data.curso.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="card-title mb-0">
+                            <i class="bi bi-clipboard-check"></i> {{ data.curso.nombre }}
+                        </h3>
+                        <p class="text-muted mb-0">
+                            {{ data.curso.codigo }} | Salón: {{ data.salon or 'N/A' }} |
+                            Fecha: {{ data.fecha.strftime('%d/%m/%Y') }}
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="display-4">{{ data.estadisticas.total }}</h2>
+                <p class="text-muted mb-0">Total Estudiantes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h2 class="display-4">{{ data.estadisticas.presentes }}</h2>
+                <p class="mb-0">Presentes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-danger text-white">
+            <div class="card-body">
+                <h2 class="display-4">{{ data.estadisticas.ausentes }}</h2>
+                <p class="mb-0">Ausentes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h2 class="display-4">{{ "%.0f"|format(data.estadisticas.porcentaje_asistencia) }}%</h2>
+                <p class="mb-0">Asistencia</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Button -->
+<div class="row mb-4">
+    <div class="col-12">
+        <form method="POST" action="{{ url_for('confirmar_asistencia', curso_id=data.curso.id) }}"
+            onsubmit="return confirm('¿Está seguro de confirmar la asistencia? Esta acción generará el reporte oficial.');">
+            <button type="submit" class="btn btn-success btn-lg w-100">
+                <i class="bi bi-check-circle"></i> Confirmar Asistencia del Curso
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Student List -->
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-3">
+            <i class="bi bi-people"></i> Listado de Estudiantes
+        </h4>
+    </div>
+</div>
+
+<div class="row">
+    {% for estudiante in data.estudiantes %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card student-card {{ 'present' if estudiante.presente else 'absent' }}">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        {% if estudiante.foto_path %}
+                        <img src="file:///{{ estudiante.foto_path }}" alt="{{ estudiante.nombre }}"
+                            class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;"
+                            onerror="this.src='https://via.placeholder.com/60'">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                            style="width: 60px; height: 60px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 30px;"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">{{ estudiante.apellido }}, {{ estudiante.nombre }}</h6>
+                        <p class="mb-0 small text-muted">{{ estudiante.codigo_carnet }}</p>
+                        <p class="mb-0 small text-muted">{{ estudiante.email }}</p>
+                        {% if estudiante.presente and estudiante.hora_acceso %}
+                        <p class="mb-0 small">
+                            <i class="bi bi-clock"></i> {{ estudiante.hora_acceso|datetime }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if estudiante.presente %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle"></i> PRESENTE
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger">
+                            <i class="bi bi-x-circle"></i> AUSENTE
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not data.estudiantes %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> No hay estudiantes inscritos en este curso.
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

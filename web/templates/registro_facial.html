@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Facial - UMG</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            width: 220px;
+            height: 280px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">UMG Biometric System</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Datos del Usuario</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="registroForm">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="apellido" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="apellido" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dpi" class="form-label">DPI</label>
+                                <input type="text" class="form-control" id="dpi" required placeholder="Número de DPI">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="telefono">
+                            </div>
+                            <div class="mb-3">
+                                <label for="codigo_carnet" class="form-label">Código / Carnet</label>
+                                <input type="text" class="form-control" id="codigo_carnet" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipo_persona" class="form-label">Tipo</label>
+                                <select class="form-select" id="tipo_persona" required>
+                                    <option value="estudiante">Estudiante</option>
+                                    <option value="catedrático">Catedrático</option>
+                                    <option value="administrativo">Administrativo</option>
+                                </select>
+                            </div>
+                            <!-- New Fields for Student -->
+                            <div id="studentFields">
+                                <div class="mb-3">
+                                    <label for="carrera" class="form-label">Carrera</label>
+                                    <select class="form-select" id="carrera">
+                                        {% for c in carreras %}
+                                        <option value="{{ c.id }}">{{ c.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="seccion" class="form-label">Sección</label>
+                                    <select class="form-select" id="seccion">
+                                        {% for s in secciones %}
+                                        <option value="{{ s.id }}">{{ s.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Captura Facial</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="camera-container mb-3">
+                            <video id="video" autoplay playsinline></video>
+                            <canvas id="canvas"></canvas>
+                            <div class="overlay"></div>
+                        </div>
+                    </div>
+                    <button id="btnCapture" class="btn btn-success btn-lg w-100 mb-3">
+                        <i class="bi bi-camera"></i> Capturar y Registrar
+                    </button>
+
+                    <div class="card mt-3">
+                        <div class="card-header bg-secondary text-white">Firma Digital</div>
+                        <div class="card-body">
+                            <canvas id="signaturePad" width="400" height="150"
+                                style="border: 1px solid #ccc; width: 100%; touch-action: none;"></canvas>
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2"
+                                onclick="clearSignature()">Borrar Firma</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const btnCapture = document.getElementById('btnCapture');
+
+        // Access camera
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                Swal.fire('Error', 'No se pudo acceder a la cámara', 'error');
+            }
+        }
+
+        startCamera();
+
+        btnCapture.addEventListener('click', async () => {
+            // 1. Validate Form
+            const form = document.getElementById('registroForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // 2. Validate/Collect Signature
+            const sigCanvas = document.getElementById('signaturePad');
+            if (isSignatureBlank(sigCanvas)) {
+                Swal.fire('Atención', 'Por favor firme en el recuadro.', 'warning');
+                return;
+            }
+            const signatureData = sigCanvas.toDataURL('image/png');
+
+            // 3. Capture Image from Video (Center Crop with 22:28 Aspect Ratio)
+            const context = canvas.getContext('2d');
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const targetRatio = 22 / 28; // ID Card Photo Ratio
+
+            let sourceWidth, sourceHeight, sourceX, sourceY;
+
+            if (videoRatio > targetRatio) {
+                // Video is wider than target -> Crop width (pillarbox)
+                sourceHeight = video.videoHeight;
+                sourceWidth = sourceHeight * targetRatio;
+                sourceX = (video.videoWidth - sourceWidth) / 2;
+                sourceY = 0;
+            } else {
+                // Video is taller than target -> Crop height (letterbox) - unlikely for webcam
+                sourceWidth = video.videoWidth;
+                sourceHeight = sourceWidth / targetRatio;
+                sourceX = 0;
+                sourceY = (video.videoHeight - sourceHeight) / 2;
+            }
+
+            // Set canvas to the cropped size (or a reasonable multiple)
+            canvas.width = sourceWidth;
+            canvas.height = sourceHeight;
+
+            // Draw cropped image
+            context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            // 4. Construct Payload
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                apellido: document.getElementById('apellido').value,
+                dpi: document.getElementById('dpi').value,
+                email: document.getElementById('email').value,
+                telefono: document.getElementById('telefono').value,
+                codigo_carnet: document.getElementById('codigo_carnet').value,
+                tipo_persona: document.getElementById('tipo_persona').value,
+                carrera_id: document.getElementById('carrera').value,
+                seccion_id: document.getElementById('seccion').value,
+                image: imageData,
+                firma: signatureData
+            };
+
+            // 5. Send to Server
+            try {
+                btnCapture.disabled = true;
+                btnCapture.textContent = 'Procesando...';
+
+                const response = await fetch('/api/registrar_rostro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire('Éxito', result.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Ocurrió un error al registrar', 'error');
+            } finally {
+                btnCapture.disabled = false;
+                btnCapture.textContent = 'Capturar y Registrar';
+            }
+        });
+
+        // Signature Pad Logic
+        const sigCanvas = document.getElementById('signaturePad');
+        const sigCtx = sigCanvas.getContext('2d');
+        let isDrawing = false;
+
+        function getPos(canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            // Scale for resolution
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return { x: x * scaleX, y: y * scaleY };
+        }
+
+        ['mousedown', 'touchstart'].forEach(evt => {
+            sigCanvas.addEventListener(evt, (e) => {
+                e.preventDefault();
+                isDrawing = true;
+                const pos = getPos(sigCanvas, e);
+                sigCtx.beginPath();
+                sigCtx.moveTo(pos.x, pos.y);
+            });
+        });
+
+        ['mousemove', 'touchmove'].forEach(evt => {
+            sigCanvas.addEventListener(evt, (e) => {
+                e.preventDefault();
+                if (!isDrawing) return;
+                const pos = getPos(sigCanvas, e);
+                sigCtx.lineTo(pos.x, pos.y);
+                sigCtx.stroke();
+            });
+        });
+
+        ['mouseup', 'touchend', 'mouseout'].forEach(evt => {
+            sigCanvas.addEventListener(evt, () => {
+                isDrawing = false;
+            });
+        });
+
+        function clearSignature() {
+            sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        }
+
+        function isSignatureBlank(canvas) {
+            const blank = document.createElement('canvas');
+            blank.width = canvas.width;
+            blank.height = canvas.height;
+            return canvas.toDataURL() === blank.toDataURL();
+        }
+    </script>
+</body>
+
+</html>

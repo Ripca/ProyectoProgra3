@@ -1,0 +1,9 @@
+flask
+opencv-python
+face_recognition
+mysql-connector-python
+numpy
+pillow
+werkzeug
+reportlab
+qrcode
