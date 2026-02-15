@@ -47,6 +47,7 @@ CREATE TABLE personas (
     -- Control
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     password_hash VARCHAR(255),
+    restriccion_ingreso BOOLEAN DEFAULT FALSE,
     
     FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE SET NULL,
     FOREIGN KEY (seccion_id) REFERENCES secciones(id) ON DELETE SET NULL
