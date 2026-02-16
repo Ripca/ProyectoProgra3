@@ -1,0 +1,37 @@
+python web/app.py
+
+http://localhost:5000/registro_facial
+
+python main.py
+
+
+CorreoProyecto
+vbwe ognm oznf uldf
+
+
+465
+
+
+Empresa=[120 150 100 180;200 220 190 210; 80 95 110 85]
+PrecioProductos=[10;15;8]
+
+>> VentaTotalTienda1=sum(Empresa(:,1))
+VentaTotalTienda1 = 400
+>> VentaTotalTienda2=sum(Empresa(:,2))
+VentaTotalTienda2 = 465
+>> VentaTotalTienda3=sum(Empresa(:,3))
+VentaTotalTienda3 = 400
+>> VentaTotalTienda4=sum(Empresa(:,4))
+VentaTotalTienda4 = 475
+>> IngresoTotalTienda1=sum(Empresa(:,1).*PrecioProductos)
+IngresoTotalTienda1 =
+
+
+
+TotalIngreso1=sum(Empresa(:,1).*PrecioProductos)
+TotalIngreso2=sum(Empresa(:,2).*PrecioProductos)
+TotalIngreso3=sum(Empresa(:,3).*PrecioProductos)
+TotalIngreso4=sum(Empresa(:,4).*PrecioProductos)
+
+
+

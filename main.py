@@ -86,7 +86,7 @@ def start_recognition(course_data=None):
 
     # 2. Setup Camera
     print("📷 Abriendo cámara...")
-    video_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW) 
+    video_capture = cv2.VideoCapture(1, cv2.CAP_DSHOW) 
     
     if not video_capture.isOpened():
         print("⚠️ Cámara 0 falló. Intentando cámara 1...")
