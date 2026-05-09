@@ -48,6 +48,42 @@ class EmailSender:
 
     @staticmethod
     def send_attendance_report(to_email, course_name, pdf_path, date_str):
-        # Already existing method signature from app.py refactor
-        # We can implement similarly if needed
-        pass
+        print(f"📧 Enviando reporte de asistencia a: {to_email}")
+        
+        if "tu_correo" in EmailSender.SENDER_EMAIL:
+             print("⚠️ Correos no configurados. Saltando envío real.")
+             return False
+
+        msg = EmailMessage()
+        msg['Subject'] = f'Reporte de Asistencia: {course_name} - {date_str}'
+        msg['From'] = EmailSender.SENDER_EMAIL
+        msg['To'] = to_email
+        msg.set_content(f"""Estimado Catedrático,
+
+Adjunto encontrará el reporte oficial de asistencia para el curso:
+{course_name}
+Fecha: {date_str}
+
+Este documento ha sido generado automáticamente por el Sistema Biométrico UMG.
+
+Atentamente,
+Registro Académico
+Universidad Mariano Gálvez""")
+
+        try:
+            with open(pdf_path, 'rb') as f:
+                file_data = f.read()
+                file_name = os.path.basename(pdf_path)
+            
+            msg.add_attachment(file_data, maintype='application', subtype='pdf', filename=file_name)
+
+            with smtplib.SMTP(EmailSender.SMTP_SERVER, EmailSender.SMTP_PORT) as server:
+                server.starttls()
+                server.login(EmailSender.SENDER_EMAIL, EmailSender.SENDER_PASSWORD)
+                server.send_message(msg)
+            
+            print(f"✅ Reporte enviado exitosamente a {to_email}")
+            return True
+        except Exception as e:
+            print(f"❌ Error enviando reporte: {e}")
+            return False

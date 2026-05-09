@@ -33,131 +33,160 @@ class PDFReportGenerator:
             c = canvas.Canvas(str(output_path), pagesize=letter)
             width, height = letter
             
-            # Header
-            logo_path = Config.ASSETS_DIR / 'logo_umg.png'
+            # --- Header ---
+            # Logo
+            logo_path = Config.ASSETS_DIR / 'LogoUniversidad.png'
             if logo_path.exists():
                 try:
-                    c.drawImage(str(logo_path), 50, height - 100, width=80, height=80, preserveAspectRatio=True)
+                    # Reduced size and adjusted position to avoid overlap
+                    c.drawImage(str(logo_path), 40, height - 90, width=60, height=60, preserveAspectRatio=True, mask='auto')
                 except:
                     pass
-            
-            # University info
-            c.setFont("Helvetica-Bold", 16)
-            c.drawString(150, height - 60, "Universidad Mariano Gálvez")
-            c.setFont("Helvetica", 12)
-            c.drawString(150, height - 80, "Sede Boca del Monte")
-            
-            # Report title
+            elif (Config.ASSETS_DIR / 'umg-logo.jpg').exists():
+                 try:
+                    c.drawImage(str(Config.ASSETS_DIR / 'umg-logo.jpg'), 40, height - 90, width=60, height=60, preserveAspectRatio=True)
+                 except:
+                    pass
+
+            # University Title
+            c.setFont("Helvetica-Bold", 18)
+            c.drawCentredString(width/2, height - 50, "UNIVERSIDAD MARIANO GÁLVEZ DE GUATEMALA")
             c.setFont("Helvetica-Bold", 14)
-            c.drawCentredString(width/2, height - 130, "REPORTE DE ASISTENCIA")
+            c.drawCentredString(width/2, height - 70, "FACULTAD DE INGENIERÍA EN SISTEMAS")
+            c.setFont("Helvetica", 12)
+            c.drawCentredString(width/2, height - 90, "SEDE BOCA DEL MONTE")
             
-            # Course information
+            # Report Title
+            c.setLineWidth(1)
+            c.line(40, height - 110, width - 40, height - 110)
+            c.setFont("Helvetica-Bold", 16)
+            c.drawCentredString(width/2, height - 135, "ACTA DE ASISTENCIA OFICIAL")
+            
+            # --- Course Information Block ---
             curso = attendance_data['curso']
-            y_pos = height - 170
-            
-            c.setFont("Helvetica-Bold", 11)
-            c.drawString(50, y_pos, "Curso:")
-            c.setFont("Helvetica", 11)
-            c.drawString(150, y_pos, f"{curso['nombre']} ({curso['codigo']})")
-            
-            y_pos -= 20
-            c.setFont("Helvetica-Bold", 11)
-            c.drawString(50, y_pos, "Catedrático:")
-            c.setFont("Helvetica", 11)
-            c.drawString(150, y_pos, f"{curso.get('catedratico_nombre', '')} {curso.get('catedratico_apellido', '')}")
-            
-            y_pos -= 20
-            c.setFont("Helvetica-Bold", 11)
-            c.drawString(50, y_pos, "Salón:")
-            c.setFont("Helvetica", 11)
-            c.drawString(150, y_pos, curso.get('salon', 'N/A'))
-            
-            y_pos -= 20
-            c.setFont("Helvetica-Bold", 11)
-            c.drawString(50, y_pos, "Fecha:")
-            c.setFont("Helvetica", 11)
-            c.drawString(150, y_pos, attendance_data['fecha'].strftime('%d/%m/%Y'))
-            
-            y_pos -= 20
-            c.setFont("Helvetica-Bold", 11)
-            c.drawString(50, y_pos, "Hora de Generación:")
-            c.setFont("Helvetica", 11)
-            c.drawString(150, y_pos, datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
-            
-            # Statistics
-            stats = attendance_data['estadisticas']
-            y_pos -= 30
-            c.setFont("Helvetica-Bold", 11)
-            c.drawString(50, y_pos, f"Total de Estudiantes: {stats['total']}")
-            c.setFillColorRGB(0, 0.5, 0)
-            c.drawString(250, y_pos, f"Presentes: {stats['presentes']}")
-            c.setFillColorRGB(0.7, 0, 0)
-            c.drawString(380, y_pos, f"Ausentes: {stats['ausentes']}")
+            rect_y = height - 230
+            c.setStrokeColorRGB(0, 0, 0)
+            c.setFillColorRGB(0.95, 0.95, 0.95)
+            c.rect(40, rect_y, width - 80, 80, fill=1)
             c.setFillColorRGB(0, 0, 0)
-            c.drawString(480, y_pos, f"({stats['porcentaje_asistencia']:.1f}%)")
             
-            # Table header
-            y_pos -= 40
+            # Left Column
             c.setFont("Helvetica-Bold", 10)
-            c.drawString(50, y_pos, "No.")
-            c.drawString(80, y_pos, "Carnet")
-            c.drawString(180, y_pos, "Nombre Completo")
-            c.drawString(380, y_pos, "Email")
-            c.drawString(520, y_pos, "Estado")
+            c.drawString(50, rect_y + 60, "CURSO:")
+            c.setFont("Helvetica", 10)
+            c.drawString(100, rect_y + 60, f"{curso['nombre']} [{curso['codigo']}]")
             
-            # Line under header
-            y_pos -= 5
-            c.line(50, y_pos, width - 50, y_pos)
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(50, rect_y + 40, "CATEDRÁTICO:")
+            c.setFont("Helvetica", 10)
+            c.drawString(130, rect_y + 40, f"{curso.get('catedratico_nombre', '')} {curso.get('catedratico_apellido', '')}")
             
-            # Student list
-            y_pos -= 20
-            c.setFont("Helvetica", 9)
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(50, rect_y + 20, "SALÓN:")
+            c.setFont("Helvetica", 10)
+            c.drawString(100, rect_y + 20, str(curso.get('salon', 'N/A')))
+            
+            # Right Column
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(350, rect_y + 60, "FECHA:")
+            c.setFont("Helvetica", 10)
+            c.drawString(450, rect_y + 60, attendance_data['fecha'].strftime('%d de %B de %Y'))
+            
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(350, rect_y + 40, "HORA REPORTE:")
+            c.setFont("Helvetica", 10)
+            c.drawString(450, rect_y + 40, datetime.now().strftime('%H:%M:%S'))
+
+            # --- Statistics Summary ---
+            stats = attendance_data['estadisticas']
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(50, rect_y - 20, f"TOTAL ESTUDIANTES: {stats['total']}")
+            
+            c.setFillColorRGB(0, 0.5, 0)
+            c.drawString(200, rect_y - 20, f"PRESENTES: {stats['presentes']}")
+            
+            c.setFillColorRGB(0.7, 0, 0)
+            c.drawString(300, rect_y - 20, f"AUSENTES: {stats['ausentes']}")
+            
+            c.setFillColorRGB(0, 0, 0)
+            c.drawString(400, rect_y - 20, f"PORCENTAJE: {stats['porcentaje_asistencia']:.1f}%")
+
+            # --- Table Header ---
+            table_y = rect_y - 50
+            c.setFillColorRGB(0.1, 0.2, 0.4) # Dark Blue Header
+            c.rect(40, table_y - 15, width - 80, 20, fill=1)
+            c.setFillColorRGB(1, 1, 1) # White text
+            
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(45, table_y - 10, "No.")
+            c.drawString(70, table_y - 10, "CARNET")
+            c.drawString(150, table_y - 10, "NOMBRE DEL ESTUDIANTE")
+            c.drawString(350, table_y - 10, "HORA ENTRADA")
+            c.drawString(480, table_y - 10, "ESTADO")
+            
+            c.setFillColorRGB(0, 0, 0) # Back to black text
+            
+            # --- Student Rows ---
+            y_pos = table_y - 35
+            row_height = 20
             
             for idx, estudiante in enumerate(attendance_data['estudiantes'], 1):
-                if y_pos < 100:  # New page if needed
+                if y_pos < 50:  # New page needed
                     c.showPage()
                     y_pos = height - 50
                     c.setFont("Helvetica", 9)
+                    # Simple header on new page
+                    c.drawString(40, y_pos + 10, "Continuación de lista...")
+                    y_pos -= 20
                 
-                # Row number
-                c.drawString(50, y_pos, str(idx))
+                # Stripe background
+                if idx % 2 == 0:
+                    c.setFillColorRGB(0.95, 0.95, 0.95)
+                    c.rect(40, y_pos - 5, width - 80, row_height, fill=1, stroke=0)
+                    c.setFillColorRGB(0, 0, 0)
                 
-                # Carnet
-                c.drawString(80, y_pos, estudiante['codigo_carnet'])
+                c.setFont("Helvetica", 9)
+                c.drawString(45, y_pos + 5, str(idx))
+                c.drawString(70, y_pos + 5, estudiante['codigo_carnet'])
                 
-                # Name
-                nombre_completo = f"{estudiante['apellido']}, {estudiante['nombre']}"
-                if len(nombre_completo) > 25:
-                    nombre_completo = nombre_completo[:22] + "..."
-                c.drawString(180, y_pos, nombre_completo)
+                nombre = f"{estudiante['apellido']}, {estudiante['nombre']}"
+                c.drawString(150, y_pos + 5, nombre[:35])
                 
-                # Email
-                email = estudiante['email']
-                if len(email) > 20:
-                    email = email[:17] + "..."
-                c.drawString(380, y_pos, email)
-                
-                # Status
-                if estudiante['presente']:
-                    c.setFillColorRGB(0, 0.5, 0)
-                    c.drawString(520, y_pos, "PRESENTE")
+                if estudiante['presente'] and estudiante['hora_acceso']:
+                    hora = estudiante['hora_acceso'].strftime('%H:%M:%S')
+                    c.drawString(350, y_pos + 5, hora)
                 else:
-                    c.setFillColorRGB(0.7, 0, 0)
-                    c.drawString(520, y_pos, "AUSENTE")
+                    c.drawString(350, y_pos + 5, "--:--:--")
+                    
+                if estudiante['presente']:
+                    c.setFillColorRGB(0, 0.6, 0)
+                    c.setFont("Helvetica-Bold", 9)
+                    c.drawString(480, y_pos + 5, "PRESENTE")
+                else:
+                    c.setFillColorRGB(0.8, 0, 0)
+                    c.setFont("Helvetica-Bold", 9)
+                    c.drawString(480, y_pos + 5, "AUSENTE")
                 
-                c.setFillColorRGB(0, 0, 0)
-                y_pos -= 18
+                c.setFillColorRGB(0, 0, 0) # Reset
+                y_pos -= row_height
+
+            # --- Footer / Signature ---
+            # Ensure space for signature
+            if y_pos < 120:
+                c.showPage()
+                y_pos = height - 100
+
+            sig_y = y_pos - 60
+            c.line(width/2 - 100, sig_y, width/2 + 100, sig_y)
+            c.setFont("Helvetica", 10)
+            c.drawCentredString(width/2, sig_y - 15, f"Firma del Catedrático: {curso.get('catedratico_nombre', '')} {curso.get('catedratico_apellido', '')}")
             
-            # Footer
+            # Bottom footer
             c.setFont("Helvetica-Oblique", 8)
-            c.drawString(50, 50, f"Generado por Sistema de Control de Asistencia UMG")
-            c.drawString(50, 35, f"Documento oficial de asistencia")
-            
-            # Signature line
-            c.line(width - 250, 80, width - 50, 80)
-            c.setFont("Helvetica", 9)
-            c.drawCentredString(width - 150, 65, "Firma del Catedrático")
-            
+            c.setFillColorRGB(0.5, 0.5, 0.5)
+            c.drawCentredString(width/2, 30, "Este documento fue generado automáticamente por el Sistema Biométrico UMG")
+            c.drawCentredString(width/2, 20, f"ID de Reporte: {datetime.now().strftime('%Y%m%d%H%M%S')}-{course_name_clean(curso['nombre'])}")
+
             c.save()
             logger.info(f"Attendance report generated: {output_path}")
             return True
@@ -165,3 +194,7 @@ class PDFReportGenerator:
         except Exception as e:
             logger.error(f"Error generating attendance report: {e}")
             return False
+
+def course_name_clean(name):
+    return "".join(c for c in name if c.isalnum())
+

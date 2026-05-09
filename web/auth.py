@@ -29,7 +29,9 @@ def catedratico_required(f):
             flash('Por favor inicie sesión', 'warning')
             return redirect(url_for('login'))
         
-        if session.get('tipo_persona') not in ['catedrático', 'administrativo']:
+        tipo = session.get('tipo_persona', '').lower()
+        role = session.get('role', '').lower()
+        if tipo not in ['catedrático', 'catedratico', 'administrativo', 'admin'] and role not in ['catedratico', 'admin']:
             flash('Acceso denegado. Solo para catedráticos', 'danger')
             return redirect(url_for('dashboard'))
         
@@ -67,7 +69,9 @@ def authenticate_user(email, password):
             return False, None, "Email o contraseña incorrectos"
         
         # Check if user is catedrático or admin
-        if user['role'] not in ['catedratico', 'admin'] and user['tipo_persona'] not in ['catedrático', 'administrativo']:
+        role = user.get('role', '').lower()
+        tipo = user.get('tipo_persona_nombre', '').lower()
+        if role not in ['catedratico', 'admin'] and tipo not in ['catedrático', 'catedratico', 'administrativo', 'admin']:
             logger.warning(f"Login attempt by non-catedrático: {email}")
             return False, None, "Solo catedráticos y administrativos pueden acceder"
         
@@ -90,8 +94,8 @@ def create_session(user_data):
     session['nombre'] = user_data['nombre']
     session['apellido'] = user_data['apellido']
     session['email'] = user_data['email']
-    session['tipo_persona'] = user_data['tipo_persona']
-    session['role'] = user_data.get('role', user_data['tipo_persona']) # Fallback
+    session['tipo_persona'] = user_data.get('tipo_persona_nombre', '')
+    session['role'] = user_data.get('role', session.get('tipo_persona', '')) # Fallback
     session['codigo_carnet'] = user_data['codigo_carnet']
     
     logger.info(f"Session created for user: {user_data['email']}")

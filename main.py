@@ -9,7 +9,7 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config import Config
-from database.models import PersonaDAO, RegistroAccesoDAO, CursoDAO
+from database.models import PersonaDAO, RegistroAccesoDAO, CursoDAO, AsistenciaClaseDAO
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -53,14 +53,14 @@ def show_menu():
 
 def select_course():
     print("\n--- Seleccionar Curso ---")
-    cursos = CursoDAO.get_all()
+    cursos = CursoDAO.get_all_assignments()
     if not cursos:
-        print("❌ No hay cursos registrados.")
+        print("❌ No hay cursos asignados.")
         return None
     
     for i, curso in enumerate(cursos, 1):
-        prof = f" ({curso['catedratico_nombre']} {curso['catedratico_apellido']})" if curso['catedratico_nombre'] else ""
-        print(f"{i}. {curso['nombre']} [{curso['codigo']}]{prof}")
+        prof = f" ({curso['catedratico_nombre']} {curso['catedratico_apellido']})" if curso.get('catedratico_nombre') else ""
+        print(f"{i}. {curso['nombre']} [{curso['codigo']}] - Sección {curso['seccion_nombre']}{prof}")
     
     try:
         idx = int(input("\nIngrese el número del curso: ")) - 1
@@ -79,18 +79,18 @@ def start_recognition(course_data=None):
 
     location_name = "Entrada Principal"
     if course_data:
-        location_name = f"Salón {course_data['salon']} - {course_data['nombre']}"
+        location_name = f"Salón {course_data['salon_codigo']} - {course_data['nombre']}"
         print(f"\n🚀 Iniciando control para: {course_data['nombre']}")
     else:
         print(f"\n🚀 Iniciando control GENERAL")
 
     # 2. Setup Camera
     print("📷 Abriendo cámara...")
-    video_capture = cv2.VideoCapture(1, cv2.CAP_DSHOW) 
+    video_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW) 
     
     if not video_capture.isOpened():
         print("⚠️ Cámara 0 falló. Intentando cámara 1...")
-        video_capture = cv2.VideoCapture(1)
+        video_capture = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         if not video_capture.isOpened():
              print("❌ Error: No se pudo abrir ninguna cámara.")
              input("Presione Enter para volver...")
@@ -155,19 +155,32 @@ def start_recognition(course_data=None):
                             try:
                                 last_access = RegistroAccesoDAO.get_recent_by_person(persona_id, minutes=Config.COOLDOWN_MINUTES)
                                 if not last_access:
-                                    # Determinar tipo y salón
-                                    tipo = "salon" if course_data else "puerta_principal"
-                                    salon = course_data['salon'] if course_data else None
-                                    
-                                    RegistroAccesoDAO.create(
-                                        persona_id=persona_id,
-                                        ubicacion=location_name,
-                                        tipo_acceso=tipo,
-                                        salon=salon
-                                    )
-                                    print(f"✅ ASISTENCIA: {name} -> {location_name}")
-                            except Exception:
-                                pass 
+                                    if course_data:
+                                        # Ensure no duplicate for the same class today
+                                        if not AsistenciaClaseDAO.exists(persona_id, course_data['curso_id'], datetime.now().date()):
+                                            AsistenciaClaseDAO.create(
+                                                persona_id=persona_id,
+                                                curso_id=course_data['curso_id'],
+                                                salon_id=course_data['salon_id'],
+                                                metodo='BIOMETRICO'
+                                            )
+                                            # Still log general access for cooldown tracking
+                                            RegistroAccesoDAO.create(
+                                                persona_id=persona_id,
+                                                punto_acceso='OTRO',
+                                                metodo='BIOMETRICO',
+                                                observacion=location_name
+                                            )
+                                            print(f"✅ ASISTENCIA CLASE: {name} -> {location_name}")
+                                    else:
+                                        RegistroAccesoDAO.create(
+                                            persona_id=persona_id,
+                                            punto_acceso='ENTRADA_PRINCIPAL',
+                                            metodo='BIOMETRICO'
+                                        )
+                                        print(f"✅ ACCESO GENERAL: {name} -> {location_name}")
+                            except Exception as e:
+                                print(f"Error logging: {e}")
 
                 face_names.append(name)
 

@@ -18,37 +18,31 @@ USE `db_biometrico`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `asistencias`
+-- Table structure for table `salones`
 --
 
-DROP TABLE IF EXISTS `asistencias`;
+DROP TABLE IF EXISTS `salones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `asistencias` (
+CREATE TABLE `salones` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `estudiante_id` int NOT NULL,
-  `curso_id` int NOT NULL,
-  `fecha` date NOT NULL,
-  `presente` tinyint(1) DEFAULT '0',
-  `confirmado_por` int DEFAULT NULL,
-  `fecha_confirmacion` timestamp NULL DEFAULT NULL,
+  `codigo` varchar(30) NOT NULL,
+  `nombre` varchar(100) DEFAULT NULL,
+  `ubicacion` varchar(150) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
-  KEY `estudiante_id` (`estudiante_id`),
-  KEY `curso_id` (`curso_id`),
-  KEY `confirmado_por` (`confirmado_por`),
-  CONSTRAINT `asistencias_ibfk_1` FOREIGN KEY (`estudiante_id`) REFERENCES `personas` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `asistencias_ibfk_2` FOREIGN KEY (`curso_id`) REFERENCES `cursos` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `asistencias_ibfk_3` FOREIGN KEY (`confirmado_por`) REFERENCES `personas` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `codigo` (`codigo`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `asistencias`
+-- Dumping data for table `salones`
 --
 
-LOCK TABLES `asistencias` WRITE;
-/*!40000 ALTER TABLE `asistencias` DISABLE KEYS */;
-/*!40000 ALTER TABLE `asistencias` ENABLE KEYS */;
+LOCK TABLES `salones` WRITE;
+/*!40000 ALTER TABLE `salones` DISABLE KEYS */;
+INSERT INTO `salones` VALUES (1,'S1','Salon 1','Primer nivel',1),(2,'S2','Salon 2','Segundo nivel',1),(3,'LAB1','Laboratorio','Edificio B',1),(5,'BM-101','Salón 101','Edificio A',1),(6,'BM-201','Salón 201','Edificio A',1),(7,'LAB-01','Laboratorio Cómputo','Edificio B',1);
+/*!40000 ALTER TABLE `salones` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -60,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-14 17:47:43
+-- Dump completed on 2026-05-01 22:38:42

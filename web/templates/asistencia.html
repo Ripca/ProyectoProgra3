@@ -3,22 +3,31 @@
 {% block title %}Asistencia - {{ data.curso.nombre }}{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
     <div class="col-12">
-        <div class="card mb-4">
-            <div class="card-body">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="card-title mb-0">
-                            <i class="bi bi-clipboard-check"></i> {{ data.curso.nombre }}
+                        <h3 class="card-title fw-bold mb-1" style="color: var(--umg-navy);">
+                            <i class="bi bi-clipboard-check-fill text-success"></i> {{ data.curso.nombre }}
                         </h3>
                         <p class="text-muted mb-0">
-                            {{ data.curso.codigo }} | Salón: {{ data.salon or 'N/A' }} |
-                            Fecha: {{ data.fecha.strftime('%d/%m/%Y') }}
+                            {{ data.curso.codigo }} | 
+                            Salón: <span class="fw-semibold">{{ data.curso.salon_codigo or data.salon or 'N/A' }}</span> 
+                            {% if data.curso.salon_ubicacion %}<span class="small text-muted">({{ data.curso.salon_ubicacion }})</span>{% endif %} |
+                            Horario: <span class="fw-semibold text-primary">{{ data.horario or 'N/A' }}</span> |
+                            Fecha: <span class="fw-semibold">{{ data.fecha.strftime('%d/%m/%Y') if data.search_performed else 'Por buscar...' }}</span>
                         </p>
-                    </div>
-                    <div>
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    </div>                    <div class="d-flex align-items-center gap-3">
+                        <form method="GET" action="{{ url_for('ver_asistencia', assignment_id=data.assignment.id) }}" class="d-flex align-items-center mb-0">
+                            <label for="fecha" class="me-2 text-muted mb-0 fw-semibold" style="white-space: nowrap;">Fecha:</label>
+                            <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" value="{{ data.fecha.strftime('%Y-%m-%d') if data.search_performed else '' }}" required style="max-width: 150px;">
+                            <button type="submit" class="btn btn-sm btn-primary ms-2 shadow-sm" style="white-space: nowrap;">
+                                <i class="bi bi-search"></i> Buscar Asistencias
+                            </button>
+                        </form>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm px-3 shadow-sm">
                             <i class="bi bi-arrow-left"></i> Volver
                         </a>
                     </div>
@@ -26,116 +35,168 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h2 class="display-4">{{ data.estadisticas.total }}</h2>
-                <p class="text-muted mb-0">Total Estudiantes</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center bg-success text-white">
-            <div class="card-body">
-                <h2 class="display-4">{{ data.estadisticas.presentes }}</h2>
-                <p class="mb-0">Presentes</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center bg-danger text-white">
-            <div class="card-body">
-                <h2 class="display-4">{{ data.estadisticas.ausentes }}</h2>
-                <p class="mb-0">Ausentes</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center bg-info text-white">
-            <div class="card-body">
-                <h2 class="display-4">{{ "%.0f"|format(data.estadisticas.porcentaje_asistencia) }}%</h2>
-                <p class="mb-0">Asistencia</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Confirm Button -->
-<div class="row mb-4">
+    {% if data.search_performed %}
+    <!-- Statistics -->
     <div class="col-12">
-        <form method="POST" action="{{ url_for('confirmar_asistencia', curso_id=data.curso.id) }}"
-            onsubmit="return confirm('¿Está seguro de confirmar la asistencia? Esta acción generará el reporte oficial.');">
-            <button type="submit" class="btn btn-success btn-lg w-100">
-                <i class="bi bi-check-circle"></i> Confirmar Asistencia del Curso
-            </button>
-        </form>
-    </div>
-</div>
-
-<!-- Student List -->
-<div class="row">
-    <div class="col-12">
-        <h4 class="mb-3">
-            <i class="bi bi-people"></i> Listado de Estudiantes
-        </h4>
-    </div>
-</div>
-
-<div class="row">
-    {% for estudiante in data.estudiantes %}
-    <div class="col-md-6 col-lg-4 mb-3">
-        <div class="card student-card {{ 'present' if estudiante.presente else 'absent' }}">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        {% if estudiante.foto_path %}
-                        <img src="file:///{{ estudiante.foto_path }}" alt="{{ estudiante.nombre }}"
-                            class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;"
-                            onerror="this.src='https://via.placeholder.com/60'">
-                        {% else %}
-                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
-                            style="width: 60px; height: 60px;">
-                            <i class="bi bi-person-fill text-white" style="font-size: 30px;"></i>
-                        </div>
-                        {% endif %}
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100">
+                    <div class="card-body">
+                        <h2 class="display-6 fw-bold" style="color: var(--umg-navy);">{{ data.estadisticas.total }}</h2>
+                        <p class="text-muted mb-0 text-uppercase small fw-bold">Total Inscritos</p>
                     </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">{{ estudiante.apellido }}, {{ estudiante.nombre }}</h6>
-                        <p class="mb-0 small text-muted">{{ estudiante.codigo_carnet }}</p>
-                        <p class="mb-0 small text-muted">{{ estudiante.email }}</p>
-                        {% if estudiante.presente and estudiante.hora_acceso %}
-                        <p class="mb-0 small">
-                            <i class="bi bi-clock"></i> {{ estudiante.hora_acceso|datetime }}
-                        </p>
-                        {% endif %}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100" style="background-color: #e8f5e9;">
+                    <div class="card-body">
+                        <h2 class="display-6 fw-bold text-success">{{ data.estadisticas.presentes }}</h2>
+                        <p class="text-success mb-0 text-uppercase small fw-bold">Presentes</p>
                     </div>
-                    <div>
-                        {% if estudiante.presente %}
-                        <span class="badge bg-success">
-                            <i class="bi bi-check-circle"></i> PRESENTE
-                        </span>
-                        {% else %}
-                        <span class="badge bg-danger">
-                            <i class="bi bi-x-circle"></i> AUSENTE
-                        </span>
-                        {% endif %}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100" style="background-color: #ffebee;">
+                    <div class="card-body">
+                        <h2 class="display-6 fw-bold text-danger">{{ data.estadisticas.ausentes }}</h2>
+                        <p class="text-danger mb-0 text-uppercase small fw-bold">Ausentes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100" style="background-color: #e3f2fd;">
+                    <div class="card-body">
+                        <h2 class="display-6 fw-bold text-primary">{{ "%.0f"|format(data.estadisticas.porcentaje_asistencia) }}%</h2>
+                        <p class="text-primary mb-0 text-uppercase small fw-bold">Asistencia</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endfor %}
+
+    <!-- Action Buttons -->
+    <div class="col-12">
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="{{ url_for('descargar_asistencia', assignment_id=data.assignment.id, fecha=data.fecha.strftime('%Y-%m-%d')) }}" class="btn btn-warning shadow-sm px-4">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Descargar Reporte PDF
+            </a>
+
+            {% if attendance_confirmed %}
+            <button class="btn btn-secondary px-4 shadow-sm" disabled>
+                <i class="bi bi-shield-check"></i> Asistencia Confirmada
+            </button>
+            {% else %}
+            <form action="{{ url_for('confirmar_asistencia', assignment_id=data.assignment.id) }}" method="POST" class="d-inline">
+                <input type="hidden" name="fecha" value="{{ data.fecha.strftime('%Y-%m-%d') }}">
+                <button type="submit" class="btn btn-success shadow-sm px-4"
+                    onclick="return confirm('¿Está seguro de confirmar la asistencia? Esta acción bloqueará la edición y enviará el reporte por correo.');">
+                    <i class="bi bi-check2-all"></i> Confirmar y Notificar
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Attendance Tree View -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 text-center">
+                <h4 class="fw-bold mb-0" style="color: var(--umg-navy);">
+                    <i class="bi bi-diagram-3-fill"></i> Jerarquía de Asistencia
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="tree-container bg-light rounded-4 p-5">
+                    <!-- Root (Course/Room) -->
+                    <div class="text-center w-100 mb-2">
+                        <div class="node-content node-root v-root p-3 px-5 shadow-lg">
+                            <h5 class="mb-1 text-white fw-bold"><i class="bi bi-geo-alt-fill"></i> {{ data.salon }}</h5>
+                            <p class="mb-0 small opacity-75 text-white">Sección {{ data.seccion }} • {{ data.curso.nombre }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Students Branch -->
+                    <div class="v-tree w-100" style="max-width: 650px; margin: 0 auto;">
+                        <ul>
+                            {% for estudiante in data.estudiantes %}
+                            <li>
+                                <div class="student-node {{ 'status-present' if estudiante.presente else 'status-absent' }} w-100 {{ 'border border-danger border-2 bg-danger-subtle' if estudiante.restriccion_ingreso else '' }}">
+                                    <div class="position-relative me-3">
+                                        {% if estudiante.foto_path %}
+                                        {% set photo_filename = estudiante.foto_path.split('\\')[-1] if '\\' in estudiante.foto_path else estudiante.foto_path.split('/')[-1] %}
+                                        <img src="/photos/{{ photo_filename }}" alt="{{ estudiante.nombre }}" 
+                                            class="rounded-circle shadow-sm" style="width: 65px; height: 65px; object-fit: cover; border: 3px solid #fff;">
+                                        {% else %}
+                                        <div class="rounded-circle bg-secondary-subtle d-flex align-items-center justify-content-center"
+                                            style="width: 65px; height: 65px; border: 3px solid #fff;">
+                                            <i class="bi bi-person-fill text-secondary fs-2"></i>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="position-absolute bottom-0 end-0 {{ 'bg-success' if estudiante.presente else 'bg-danger' }} rounded-circle border border-white shadow-sm" 
+                                             style="width: 18px; height: 18px;"></div>
+                                    </div>
+
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0 fw-bold text-dark" style="font-size: 1rem;">
+                                            {{ estudiante.nombre }} {{ estudiante.apellido }}
+                                            {% if estudiante.restriccion_ingreso %}
+                                            <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Restricción de Ingreso"></i>
+                                            {% endif %}
+                                        </h6>
+                                        <div class="d-flex flex-column gap-0">
+                                            <small class="text-muted" style="font-size: 0.8rem;">
+                                                <i class="bi bi-card-text"></i> {{ estudiante.codigo_carnet }}
+                                            </small>
+                                            <small class="text-primary opacity-75" style="font-size: 0.75rem;">
+                                                <i class="bi bi-envelope-at-fill"></i> {{ estudiante.email }}
+                                            </small>
+                                        </div>
+                                        {% if estudiante.presente and estudiante.hora_acceso %}
+                                        <div class="mt-1">
+                                            <span class="badge bg-success-subtle text-success border-0 px-2 py-1" style="font-size: 0.7rem;">
+                                                <i class="bi bi-clock-history"></i> {{ estudiante.hora_acceso|datetime('%H:%M:%S') }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="ms-2">
+                                        {% if estudiante.presente %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">PRESENTE</span>
+                                        {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">AUSENTE</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 mt-4">
+        <div class="alert alert-info border-0 shadow-sm d-flex align-items-center" style="border-radius: 12px;">
+            <i class="bi bi-calendar2-week fs-3 me-3 text-info"></i>
+            <div>
+                <h5 class="alert-heading mb-1 fw-bold">Seleccione una fecha</h5>
+                <p class="mb-0">Por favor, utilice el filtro superior para seleccionar la fecha de la cual desea consultar la asistencia y presione "Buscar Asistencias".</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
-{% if not data.estudiantes %}
-<div class="row">
+{% if data.search_performed and not data.estudiantes %}
+<div class="row mt-4">
     <div class="col-12">
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle"></i> No hay estudiantes inscritos en este curso.
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center" style="border-radius: 12px;">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>No hay estudiantes inscritos en este curso actualmente para la fecha seleccionada.</div>
         </div>
     </div>
 </div>

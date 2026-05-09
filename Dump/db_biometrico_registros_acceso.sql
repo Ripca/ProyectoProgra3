@@ -27,14 +27,15 @@ DROP TABLE IF EXISTS `registros_acceso`;
 CREATE TABLE `registros_acceso` (
   `id` int NOT NULL AUTO_INCREMENT,
   `persona_id` int NOT NULL,
-  `fecha_hora` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `ubicacion` varchar(50) DEFAULT NULL,
-  `tipo_acceso` enum('puerta_principal','salon') NOT NULL,
-  `salon` varchar(20) DEFAULT NULL,
+  `fecha_hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `punto_acceso` enum('ENTRADA_PRINCIPAL','SALIDA_PRINCIPAL','OTRO') NOT NULL DEFAULT 'ENTRADA_PRINCIPAL',
+  `metodo` enum('BIOMETRICO','MANUAL') NOT NULL DEFAULT 'BIOMETRICO',
+  `observacion` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `persona_id` (`persona_id`),
-  CONSTRAINT `registros_acceso_ibfk_1` FOREIGN KEY (`persona_id`) REFERENCES `personas` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `idx_acceso_fecha` (`fecha_hora`),
+  KEY `idx_acceso_persona_fecha` (`persona_id`,`fecha_hora`),
+  CONSTRAINT `fk_registros_acceso_persona` FOREIGN KEY (`persona_id`) REFERENCES `personas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -43,7 +44,7 @@ CREATE TABLE `registros_acceso` (
 
 LOCK TABLES `registros_acceso` WRITE;
 /*!40000 ALTER TABLE `registros_acceso` DISABLE KEYS */;
-INSERT INTO `registros_acceso` VALUES (1,1,'2026-02-07 18:01:19','Puerta Principal','puerta_principal',NULL),(2,2,'2026-02-07 18:05:16','Puerta Principal','puerta_principal',NULL),(3,4,'2026-02-07 18:12:20','Entrada Principal','puerta_principal',NULL),(4,6,'2026-02-07 18:12:20','Entrada Principal','puerta_principal',NULL),(5,6,'2026-02-07 18:12:20','Laboratorio 1','salon','LAB-1'),(6,11,'2026-02-07 18:18:30','Puerta Principal','puerta_principal',NULL),(7,1,'2026-02-07 18:18:31','Puerta Principal','puerta_principal',NULL),(8,2,'2026-02-07 18:18:36','Puerta Principal','puerta_principal',NULL),(9,2,'2026-02-07 18:24:18','LAB-1','salon','LAB-1'),(10,11,'2026-02-07 18:24:21','LAB-1','salon','LAB-1'),(11,1,'2026-02-07 18:24:24','LAB-1','salon','LAB-1'),(12,1,'2026-02-14 23:39:49','Entrada Principal','puerta_principal',NULL),(13,11,'2026-02-14 23:39:53','Entrada Principal','puerta_principal',NULL),(14,2,'2026-02-14 23:39:55','Entrada Principal','puerta_principal',NULL),(15,1,'2026-02-14 23:45:38','Entrada Principal','puerta_principal',NULL),(16,2,'2026-02-14 23:45:39','Entrada Principal','puerta_principal',NULL),(17,11,'2026-02-14 23:46:03','Entrada Principal','puerta_principal',NULL);
+INSERT INTO `registros_acceso` VALUES (1,1,'2026-04-30 06:10:09','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(2,2,'2026-04-30 06:10:09','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(3,3,'2026-04-30 06:10:09','SALIDA_PRINCIPAL','MANUAL',NULL),(4,1,'2026-04-30 06:10:18','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(5,2,'2026-04-30 06:10:18','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(6,3,'2026-04-30 06:10:18','SALIDA_PRINCIPAL','MANUAL',NULL);
 /*!40000 ALTER TABLE `registros_acceso` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -56,4 +57,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-14 17:47:42
+-- Dump completed on 2026-05-01 22:38:40

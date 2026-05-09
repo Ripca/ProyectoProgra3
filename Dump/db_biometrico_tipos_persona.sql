@@ -18,34 +18,29 @@ USE `db_biometrico`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `cursos`
+-- Table structure for table `tipos_persona`
 --
 
-DROP TABLE IF EXISTS `cursos`;
+DROP TABLE IF EXISTS `tipos_persona`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `cursos` (
+CREATE TABLE `tipos_persona` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL,
-  `codigo` varchar(20) NOT NULL,
-  `horario` varchar(100) DEFAULT NULL,
-  `salon` varchar(20) DEFAULT NULL,
-  `catedratico_id` int DEFAULT NULL,
+  `nombre` varchar(50) NOT NULL,
+  `descripcion` varchar(150) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `codigo` (`codigo`),
-  KEY `catedratico_id` (`catedratico_id`),
-  CONSTRAINT `cursos_ibfk_1` FOREIGN KEY (`catedratico_id`) REFERENCES `personas` (`id`) ON DELETE SET NULL
+  UNIQUE KEY `nombre` (`nombre`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `cursos`
+-- Dumping data for table `tipos_persona`
 --
 
-LOCK TABLES `cursos` WRITE;
-/*!40000 ALTER TABLE `cursos` DISABLE KEYS */;
-INSERT INTO `cursos` VALUES (1,'Programación I','PROG-101','Lunes 07:00-09:00','A-101',4),(2,'Base de Datos I','BD-101','Miércoles 09:00-11:00','LAB-1',4),(3,'Matemática Discreta','MATE-201','Martes 07:00-09:00','B-202',5),(4,'Física Fundamental','FIS-101','Jueves 11:00-13:00','LAB-FIS',5);
-/*!40000 ALTER TABLE `cursos` ENABLE KEYS */;
+LOCK TABLES `tipos_persona` WRITE;
+/*!40000 ALTER TABLE `tipos_persona` DISABLE KEYS */;
+INSERT INTO `tipos_persona` VALUES (1,'ESTUDIANTE','Persona que recibe clases'),(2,'CATEDRATICO','Persona que imparte clases'),(3,'ADMINISTRATIVO','Personal administrativo');
+/*!40000 ALTER TABLE `tipos_persona` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -57,4 +52,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-14 17:47:43
+-- Dump completed on 2026-05-01 22:38:44

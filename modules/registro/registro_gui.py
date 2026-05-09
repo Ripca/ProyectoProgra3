@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 
 from config import Config
-from database.models import PersonaDAO
+from database.models import PersonaDAO, TipoPersonaDAO
 from modules.registro.camera_capture import CameraCapture
 from modules.registro.face_encoder import FaceEncoder
 from modules.registro.id_generator import IDGenerator
@@ -78,28 +78,16 @@ class RegistroGUI:
         row += 2
         
         # Tipo de persona
+        self.tipos_persona_list = TipoPersonaDAO.get_all()
+        tipos_nombres = [t['nombre'] for t in self.tipos_persona_list] if self.tipos_persona_list else ['estudiante', 'catedrático', 'administrativo', 'operativo']
+        
         ttk.Label(main_frame, text="Tipo de Persona:*").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.tipo_var = tk.StringVar()
         tipo_combo = ttk.Combobox(main_frame, textvariable=self.tipo_var, width=37,
-                                  values=['estudiante', 'catedrático', 'administrativo', 'operativo'])
+                                  values=tipos_nombres)
         tipo_combo.grid(row=row, column=1, pady=5)
-        tipo_combo.current(0)
-        row += 1
-        
-        # Carrera
-        ttk.Label(main_frame, text="Carrera:").grid(row=row, column=0, sticky=tk.W, pady=5)
-        self.carrera_var = tk.StringVar()
-        carrera_combo = ttk.Combobox(main_frame, textvariable=self.carrera_var, width=37,
-                                     values=['Ingeniería en Sistemas', 'Ingeniería Civil', 
-                                            'Derecho', 'Administración de Empresas',
-                                            'Medicina', 'Psicología', 'Otra'])
-        carrera_combo.grid(row=row, column=1, pady=5)
-        row += 1
-        
-        # Sección
-        ttk.Label(main_frame, text="Sección:").grid(row=row, column=0, sticky=tk.W, pady=5)
-        self.seccion_var = tk.StringVar()
-        ttk.Entry(main_frame, textvariable=self.seccion_var, width=40).grid(row=row, column=1, pady=5)
+        if tipos_nombres:
+            tipo_combo.current(0)
         row += 1
         
         # Password (for catedráticos and admin)
@@ -290,6 +278,15 @@ class RegistroGUI:
             if self.password_var.get().strip():
                 password_hash = hash_password(self.password_var.get())
             
+            # Get Tipo de Persona ID
+            tipo_nombre = self.tipo_var.get()
+            tipo_persona_id = 1 # default
+            if self.tipos_persona_list:
+                for t in self.tipos_persona_list:
+                    if t['nombre'] == tipo_nombre:
+                        tipo_persona_id = t['id']
+                        break
+            
             # Insert into database
             self.status_var.set("Guardando en base de datos...")
             self.root.update()
@@ -299,12 +296,13 @@ class RegistroGUI:
                 apellido=self.apellido_var.get().strip(),
                 telefono=self.telefono_var.get().strip() or None,
                 email=self.email_var.get().strip(),
-                tipo_persona=self.tipo_var.get(),
-                carrera=self.carrera_var.get().strip() or None,
-                seccion=self.seccion_var.get().strip() or None,
+                tipo_persona_id=tipo_persona_id,
                 foto_path=str(permanent_photo_path),
+                firma_path=None,
                 encoding_facial=encoding,
                 codigo_carnet=codigo_carnet,
+                seccion_id=None,
+                carrera_id=None,
                 password_hash=password_hash
             )
             
@@ -318,9 +316,9 @@ class RegistroGUI:
                 'nombre': self.nombre_var.get().strip(),
                 'apellido': self.apellido_var.get().strip(),
                 'email': self.email_var.get().strip(),
-                'tipo_persona': self.tipo_var.get(),
-                'carrera': self.carrera_var.get().strip() or 'N/A',
-                'seccion': self.seccion_var.get().strip() or 'N/A',
+                'tipo_persona': tipo_nombre,
+                'carrera': tipo_nombre,
+                'seccion': 'N/A',
                 'codigo_carnet': codigo_carnet,
                 'foto_path': str(permanent_photo_path),
                 'fecha_registro': datetime.now().strftime('%d/%m/%Y')
@@ -366,9 +364,10 @@ Email: {email_message}
         self.apellido_var.set("")
         self.telefono_var.set("")
         self.email_var.set("")
-        self.tipo_var.set("estudiante")
-        self.carrera_var.set("")
-        self.seccion_var.set("")
+        if hasattr(self, 'tipos_persona_list') and self.tipos_persona_list:
+            self.tipo_var.set(self.tipos_persona_list[0]['nombre'])
+        else:
+            self.tipo_var.set("estudiante")
         self.password_var.set("")
         self.captured_photo_path = None
         self.photo_status_var.set("No se ha capturado ninguna foto")

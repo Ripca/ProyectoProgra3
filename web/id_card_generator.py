@@ -9,7 +9,7 @@ import tempfile
 
 class IDCardGenerator:
     @staticmethod
-    def generate(nombre, apellido, dpi, codigo_carnet, carrera, foto_path, firma_path, output_path, qr_data=None):
+    def generate(nombre, apellido, codigo_carnet, carrera, foto_path, firma_path, output_path, qr_data=None):
         """
         Generates a PDF ID Card with Premium Design
         """
@@ -110,12 +110,10 @@ class IDCardGenerator:
         c.setFont("Helvetica-Bold", 6)
         c.setFillColor(UMG_BLUE)
         c.drawString(text_x, info_y, "CARNET:")
-        c.drawString(text_x + 25*mm, info_y, "DPI/CUI:")
         
         c.setFont("Helvetica", 8)
         c.setFillColor(TEXT_BLACK)
         c.drawString(text_x, info_y - 3.5*mm, codigo_carnet)
-        c.drawString(text_x + 25*mm, info_y - 3.5*mm, dpi)
 
         # 6. QR Code (Moved to Top Right - Optimized)
         qr_size = 14 * mm

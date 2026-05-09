@@ -1,48 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Sistema Biométrico UMG{% endblock %}
+{% block title %}Iniciar Sesión - UMG{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
     <div class="col-md-5">
-        <div class="card">
+        <div class="card border-0 shadow-lg">
             <div class="card-body p-5">
                 <div class="text-center mb-4">
-                    <h2 class="fw-bold" style="color: var(--umg-blue);">
-                        <i class="bi bi-shield-lock"></i> Sistema Biométrico
+                    <img src="/assets/LogoUniversidad.png" alt="UMG Logo" style="height: 100px;" class="mb-3">
+                    <h2 class="fw-bold" style="color: var(--umg-navy);">
+                        Portal Biométrico
                     </h2>
-                    <p class="text-muted">Universidad Mariano Gálvez</p>
-                    <p class="text-muted small">Sede Boca del Monte</p>
+                    <p class="text-muted">Universidad Mariano Gálvez de Guatemala</p>
                 </div>
 
                 <form method="POST" action="{{ url_for('login') }}">
                     <div class="mb-3">
                         <label for="email" class="form-label">
-                            <i class="bi bi-envelope"></i> Email UMG
+                            <i class="bi bi-envelope-fill"></i> Correo Institucional
                         </label>
-                        <input type="email" class="form-control form-control-lg" id="email" name="email"
+                        <input type="email" class="form-control" id="email" name="email"
                             placeholder="usuario@umg.edu.gt" required autofocus>
                     </div>
 
                     <div class="mb-4">
                         <label for="password" class="form-label">
-                            <i class="bi bi-key"></i> Contraseña
+                            <i class="bi bi-lock-fill"></i> Contraseña
                         </label>
-                        <input type="password" class="form-control form-control-lg" id="password" name="password"
+                        <input type="password" class="form-control" id="password" name="password"
                             placeholder="••••••••" required>
                     </div>
 
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                            <i class="bi bi-box-arrow-in-right"></i> Entrar al Sistema
                         </button>
                     </div>
                 </form>
 
                 <div class="text-center mt-4">
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle"></i> Solo para catedráticos y administrativos
+                    <hr class="my-4">
+                    <small class="text-muted d-block mb-1">
+                        <i class="bi bi-info-circle"></i> Acceso restringido para personal
                     </small>
+                    <small class="text-muted opacity-50">Sede Boca del Monte</small>
                 </div>
             </div>
         </div>

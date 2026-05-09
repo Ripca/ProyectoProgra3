@@ -1,69 +1,97 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Sistema Biométrico UMG{% endblock %}
+{% block title %}Inicio - Sistema Biométrico UMG{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
     <div class="col-12">
-        <div class="card mb-4">
-            <div class="card-body">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="card-title fw-bold">
-                            <i class="bi bi-speedometer2"></i> Dashboard
+                        <h3 class="card-title fw-bold mb-1" style="color: var(--umg-navy);">
+                            <i class="bi bi-grid-fill"></i> Panel de Control
                         </h3>
                         <p class="text-muted mb-0">
-                            Bienvenido/a, {{ session.get('nombre') }} {{ session.get('apellido') }}
+                            Bienvenido/a al portal, <span class="fw-semibold text-dark">{{ session.get('nombre') }} {{ session.get('apellido') }}</span>
                         </p>
                     </div>
-                    {% if session.get('role') == 'catedratico' or session.get('role') == 'admin' %}
-                    <a href="{{ url_for('registro_facial') }}" class="btn btn-success btn-lg shadow-sm">
-                        <i class="bi bi-person-plus-fill"></i> Registrar Alumno
+                    {% set current_role = session.get('role', '') | lower %}
+                    {% if current_role in ['catedratico', 'catedrático', 'admin', 'administrativo'] %}
+                    <a href="{{ url_for('registro_facial') }}" class="btn btn-primary shadow-sm px-4">
+                        <i class="bi bi-person-plus-fill"></i> Nuevo Estudiante
                     </a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
     <div class="col-12">
-        <h4 class="mb-4 fw-bold text-secondary">
-            <i class="bi bi-journal-bookmark-fill"></i> Mis Cursos
+        <h4 class="section-title mb-4">
+            <i class="bi bi-journal-bookmark-fill"></i> Mis Cursos Asignados
         </h4>
     </div>
-</div>
 
-{% if cursos %}
-<div class="row">
+    {% if cursos %}
     {% for curso in cursos %}
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 student-card">
-            <div class="card-body">
-                <h5 class="card-title">{{ curso.nombre }}</h5>
-                <p class="card-text">
-                    <strong>Código:</strong> {{ curso.codigo }}<br>
-                    <strong>Salón:</strong> {{ curso.salon or 'No asignado' }}<br>
-                    <strong>Horario:</strong> {{ curso.horario or 'No especificado' }}
-                </p>
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm student-card">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold" style="color: var(--umg-navy);">{{ curso.curso_nombre }}</h5>
+                    <span class="badge bg-primary rounded-pill px-3">Sección {{ curso.seccion_nombre }}</span>
+                </div>
             </div>
-            <div class="card-footer bg-transparent">
-                <a href="{{ url_for('ver_asistencia', curso_id=curso.id) }}" class="btn btn-primary w-100">
-                    <i class="bi bi-clipboard-check"></i> Ver Asistencia
+            <div class="card-body">
+                <div class="mb-3 d-flex align-items-center">
+                    <div class="bg-light rounded-circle p-2 me-3">
+                        <i class="bi bi-code-square text-primary"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Código Materia</small>
+                        <span class="fw-semibold">{{ curso.curso_codigo }}</span>
+                    </div>
+                </div>
+                <div class="mb-3 d-flex align-items-center">
+                    <div class="bg-light rounded-circle p-2 me-3">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Salón / Ubicación</small>
+                        <span class="fw-semibold">
+                            {{ curso.salon_codigo }} <span class="text-muted small">({{ curso.salon_ubicacion or 'General' }})</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="bg-light rounded-circle p-2 me-3">
+                        <i class="bi bi-clock-fill text-warning"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Horario</small>
+                        <span class="fw-semibold text-primary">{{ curso.horario_full }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 p-3">
+                <a href="{{ url_for('ver_asistencia', assignment_id=curso.assignment_id) }}" class="btn btn-outline-primary w-100 py-2">
+                    <i class="bi bi-clipboard-check-fill"></i> Control de Asistencia
                 </a>
             </div>
         </div>
     </div>
     {% endfor %}
-</div>
-{% else %}
-<div class="row">
+    {% else %}
     <div class="col-12">
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No tiene cursos asignados actualmente.
+        <div class="card border-0 shadow-sm p-5 text-center">
+            <div class="mb-3">
+                <i class="bi bi-folder-x text-muted" style="font-size: 3rem;"></i>
+            </div>
+            <h5 class="text-muted">No tienes cursos asignados actualmente.</h5>
+            <p class="text-muted small">Contacta con administración si crees que esto es un error.</p>
         </div>
     </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}

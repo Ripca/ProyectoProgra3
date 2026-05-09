@@ -1,0 +1,332 @@
+:root {
+    --umg-navy: #003366;
+    --umg-blue-mi: #0A3970;
+    --umg-action-blue: #1184B9;
+    --umg-info-blue: #08B8F6;
+    --umg-accent: #D4AF37;
+    --text-dark: #2D2D2D;
+    --bg-light: #f0f2f5;
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: 'Urbanist', sans-serif;
+    color: var(--text-dark);
+    min-height: 100vh;
+}
+
+/* Navbar styles */
+.navbar {
+    background-color: var(--umg-navy) !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    padding: 0.8rem 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand img {
+    height: 50px;
+    margin-right: 15px;
+}
+
+.nav-link {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+/* Card styles */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 2px solid #f0f2f5;
+    padding: 1.5rem;
+}
+
+.card-header h4 {
+    color: var(--umg-navy);
+    font-weight: 700;
+    margin: 0;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* Form styles */
+.form-label {
+    font-weight: 600;
+    color: var(--umg-navy);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-control, .form-select {
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dee2e6;
+    font-family: 'Lato', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(17, 132, 185, 0.2);
+    border-color: var(--umg-action-blue);
+}
+
+/* Button styles */
+.btn {
+    border-radius: 15px;
+    padding: 0.8rem 1.5rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background-color: var(--umg-action-blue);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0d6efd;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+.btn-success {
+    background-color: #28a745;
+    border: none;
+}
+
+.btn-warning {
+    background-color: var(--umg-accent);
+    border: none;
+    color: white;
+}
+
+.btn-warning:hover {
+    color: white;
+    filter: brightness(1.1);
+}
+
+/* Section elements */
+.section-title {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-bottom: 0.5rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: var(--umg-action-blue);
+}
+
+/* Tree view styles (moved from base.html and updated) */
+.tree ul {
+    padding-top: 20px;
+    position: relative;
+    transition: all 0.5s;
+    display: flex;
+    justify-content: center;
+}
+
+.tree li {
+    float: left;
+    text-align: center;
+    list-style-type: none;
+    position: relative;
+    padding: 20px 5px 0 5px;
+    transition: all 0.5s;
+}
+
+.tree li::before, .tree li::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 50%;
+    border-top: 2px solid #ccc;
+    width: 50%;
+    height: 20px;
+}
+
+.tree li::after {
+    right: auto;
+    left: 50%;
+    border-left: 2px solid #ccc;
+}
+
+.tree li:only-child::after, .tree li:only-child::before {
+    display: none;
+}
+
+.tree li:only-child {
+    padding-top: 0;
+}
+
+.tree li:first-child::before, .tree li:last-child::after {
+    border: 0 none;
+}
+
+.tree li:last-child::before {
+    border-right: 2px solid #ccc;
+    border-radius: 0 5px 0 0;
+}
+
+.tree li:first-child::after {
+    border-radius: 5px 0 0 0;
+}
+
+.tree ul ul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 2px solid #ccc;
+    width: 0;
+    height: 20px;
+}
+
+.tree li .node-content {
+    border: 2px solid #ccc;
+    padding: 10px;
+    text-decoration: none;
+    color: #666;
+    display: inline-block;
+    border-radius: 12px;
+    transition: all 0.5s;
+    background-color: white;
+    min-width: 150px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.node-root {
+    background-color: var(--umg-navy) !important;
+    color: white !important;
+    border-color: var(--umg-navy) !important;
+    font-weight: bold;
+}
+
+.student-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    border: 3px solid white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Vertical Tree Styles - Fluid & Continuous */
+.tree-container {
+    padding: 3rem !important;
+}
+
+.v-tree ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-left: 20px;
+    position: relative;
+    border-left: 3px solid #e0e0e0; /* Continuous vertical line */
+}
+
+.v-tree li {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+}
+
+.v-tree li::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 40px;
+    height: 3px;
+    background-color: #e0e0e0; /* Horizontal connector */
+    border-radius: 0 5px 5px 0;
+}
+
+.v-tree li:last-child {
+    border-left: 3px solid white; /* Hide the vertical line after last element */
+    margin-left: -3px;
+}
+
+.v-tree li:last-child::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 50%;
+    background-color: #e0e0e0;
+}
+
+.student-node {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 16px;
+    padding: 12px 20px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.student-node:hover {
+    transform: translateX(10px) translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.status-present {
+    border-left: 6px solid #2ecc71;
+}
+
+.status-absent {
+    border-left: 6px solid #ff4757;
+}
+
+.v-root {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 40px;
+    display: inline-block;
+}
+
+.v-root::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -40px;
+    width: 3px;
+    height: 40px;
+    background-color: #e0e0e0;
+    transform: translateX(-50%);
+}

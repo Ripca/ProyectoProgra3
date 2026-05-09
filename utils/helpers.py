@@ -135,12 +135,10 @@ def parse_date(date_str, format_str='%Y-%m-%d'):
 
 
 def hash_password(password):
-    """Hash a password using bcrypt"""
-    import bcrypt
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    """Return plain text password instead of hashing"""
+    return password
 
 
 def verify_password(password, hashed):
-    """Verify password against hash"""
-    import bcrypt
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    """Verify password against plain text"""
+    return password == hashed
