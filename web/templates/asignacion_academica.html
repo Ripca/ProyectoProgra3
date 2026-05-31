@@ -1,0 +1,594 @@
+{% extends 'base.html' %}
+
+{% block title %}Asignación Académica - UMG{% endblock %}
+
+{% block content %}
+{% set tipo_persona = (persona.tipo_persona_nombre or '') | lower %}
+{% set es_estudiante = 'estudiante' in tipo_persona %}
+{% set es_catedratico = 'catedr' in tipo_persona %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-person-lines-fill"></i> Paso 2: Asignación Académica</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    {% if persona.foto_path %}
+                        <img src="/photos/{{ persona.foto_path.split('\\')[-1] if '\\' in persona.foto_path else persona.foto_path.split('/')[-1] }}" 
+                             alt="Foto" class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle me-3 d-flex justify-content-center align-items-center text-white" 
+                             style="width: 80px; height: 80px; font-size: 2rem;">
+                            <i class="bi bi-person"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h5 class="mb-1">{{ persona.nombre }} {{ persona.apellido }}</h5>
+                        <div class="text-muted small d-flex flex-wrap gap-2">
+                            {% if persona.dpi %}
+                                <span><strong>DPI:</strong> {{ persona.dpi }}</span>
+                            {% endif %}
+                            {% if persona.codigo_carnet %}
+                                <span><strong>Carnet:</strong> {{ persona.codigo_carnet }}</span>
+                            {% endif %}
+                            {% if persona.tipo_persona_nombre %}
+                                <span><strong>Tipo:</strong> {{ persona.tipo_persona_nombre }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <!-- Filtros -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Sede</label>
+                    <select id="filterSede" class="form-select">
+                        <option value="">Seleccione sede</option>
+                        {% for sede in sedes %}
+                            <option value="{{ sede.nombre }}" data-sede-id="{{ sede.id }}">{{ sede.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Jornada</label>
+                    <select id="filterJornada" class="form-select">
+                        <option value="">Seleccione jornada</option>
+                        {% for jornada in jornadas %}
+                            <option value="{{ jornada.nombre }}">{{ jornada.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Carrera</label>
+                    <select id="filterCarrera" class="form-select">
+                        <option value="">Seleccione carrera</option>
+                        {% for carrera in carreras %}
+                            <option value="{{ carrera.nombre }}">{{ carrera.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Sección</label>
+                    <select id="filterSeccion" class="form-select">
+                        <option value="">Todas las secciones</option>
+                        {% for seccion in secciones %}
+                            <option value="{{ seccion.nombre }}">{{ seccion.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-grid gap-2">
+            {% if es_estudiante %}
+            <button id="btnInscribir" class="btn btn-success btn-lg">
+                <i class="bi bi-check-circle"></i> Confirmar Asignación
+            </button>
+            {% endif %}
+            {% if es_catedratico %}
+            <button id="btnAsignarDocente" class="btn btn-success btn-lg">
+                <i class="bi bi-journal-check"></i> Asignar Curso
+            </button>
+            {% endif %}
+            <a href="/registro_facial" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a Registro
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        {% if inscripciones %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-check2-square"></i> Cursos inscritos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for curso in inscripciones %}
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold">{{ curso.curso_nombre }} ({{ curso.curso_codigo }})</div>
+                            <div class="small text-muted">Sección {{ curso.seccion_nombre }} | {{ curso.jornada_nombre }} | {{ curso.sede_nombre }}</div>
+                            <div class="small text-primary">{{ curso.horario_full }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if es_catedratico %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-easel2"></i> Programación como catedrático</h5>
+            </div>
+            <div class="card-body">
+                {% if cursos_catedratico %}
+                <div class="row g-3">
+                    {% for curso in cursos_catedratico %}
+                    <div class="col-md-6 teacher-course-row filterable-course"
+                         data-sede="{{ curso.sede_nombre }}"
+                         data-jornada="{{ curso.jornada_nombre }}"
+                         data-carrera="{{ curso.carrera_nombre }}">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold">{{ curso.curso_nombre }} ({{ curso.curso_codigo }})</div>
+                            <div class="small text-muted">Sección {{ curso.seccion_nombre }} | Salón {{ curso.salon_codigo }}</div>
+                            <div class="small text-muted">{{ curso.sede_nombre }} | {{ curso.jornada_nombre }} | {{ curso.carrera_nombre }}</div>
+                            <div class="small text-primary">{{ curso.horario_full }}</div>
+                            <a href="{{ url_for('ver_asistencia', assignment_id=curso.assignment_id, fecha=today.strftime('%Y-%m-%d')) }}" class="btn btn-sm btn-outline-primary mt-3">
+                                <i class="bi bi-eye"></i> Ver curso
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Esta persona es catedrático, pero aún no tiene programación asignada.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-journal-plus"></i> Cursos disponibles para asignarme</h5>
+                <span class="badge bg-primary" id="docSelectedCount">0 seleccionados</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width: 50px;"></th>
+                                <th>Curso / Sección</th>
+                                <th>Horario</th>
+                                <th>Sede / Jornada</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prog in programaciones_docente %}
+                            <tr class="doc-course-row filterable-course"
+                                data-sede="{{ prog.sede_nombre }}"
+                                data-sede-id="{{ prog.sede_id }}"
+                                data-jornada="{{ prog.jornada_nombre }}"
+                                data-carrera="{{ prog.carrera_nombre }}"
+                                data-seccion="{{ prog.seccion_nombre }}">
+                                <td class="text-center">
+                                    <input class="form-check-input doc-course-radio" type="radio" name="docProgramacion"
+                                           value="{{ prog.assignment_id }}"
+                                           {% if prog.tiene_conflicto %}disabled{% endif %}>
+                                </td>
+                                <td>
+                                    <strong>{{ prog.curso_nombre }}</strong> ({{ prog.curso_codigo }})
+                                    <br>
+                                    <span class="badge bg-secondary">Sección {{ prog.seccion_nombre }}</span>
+                                    <span class="badge bg-info text-dark">{{ prog.carrera_nombre }}</span>
+                                </td>
+                                <td>
+                                    <i class="bi bi-clock text-primary"></i> {{ prog.horario_full }}
+                                    <br>
+                                    <small class="text-muted"><i class="bi bi-door-open"></i> Salón {{ prog.salon_codigo }}</small>
+                                </td>
+                                <td>
+                                    {{ prog.sede_nombre }}<br>
+                                    <small class="text-muted">{{ prog.jornada_nombre }}</small>
+                                </td>
+                                <td>
+                                    {% if prog.tiene_conflicto %}
+                                        <span class="badge bg-warning text-dark">Horario ocupado</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Disponible</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                                    No hay cursos disponibles para asignar.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if es_estudiante %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-card-text"></i> Carnets por sede</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label for="carnetSedeSelect" class="form-label fw-semibold">Sede</label>
+                        <select id="carnetSedeSelect" class="form-select">
+                            {% for sede in sedes %}
+                            <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-7">
+                        <label for="carnetSedeValue" class="form-label fw-semibold">Carnet para la sede seleccionada</label>
+                        <input type="text" id="carnetSedeValue" class="form-control" placeholder="Ingrese el carnet">
+                    </div>
+                </div>
+                <div class="form-text mt-2">Si el estudiante llevará cursos en varias sedes, seleccione cada sede y registre su carnet correspondiente.</div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Programación Disponible</h5>
+                <span class="badge bg-primary" id="selectedCount">0 seleccionados</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="coursesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width: 50px;">
+                                    <input class="form-check-input" type="checkbox" id="selectAll">
+                                </th>
+                                <th>Curso / Sección</th>
+                                <th>Horario</th>
+                                <th>Sede / Jornada</th>
+                                <th>Catedrático</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prog in programaciones %}
+                            <tr class="course-row filterable-course" 
+                                data-sede="{{ prog.sede_nombre }}" 
+                                data-sede-id="{{ prog.sede_id }}"
+                                data-jornada="{{ prog.jornada_nombre }}" 
+                                data-carrera="{{ prog.carrera_nombre }}"
+                                data-seccion="{{ prog.seccion_nombre }}">
+                                <td class="text-center">
+                                    <input class="form-check-input course-checkbox" type="checkbox" value="{{ prog.assignment_id }}"
+                                           {% if inscripciones | selectattr('assignment_id', 'equalto', prog.assignment_id) | list %}checked{% endif %}>
+                                </td>
+                                <td>
+                                    <strong>{{ prog.curso_nombre }}</strong> ({{ prog.curso_codigo }})
+                                    <br>
+                                    <span class="badge bg-secondary">Sección {{ prog.seccion_nombre }}</span>
+                                    <span class="badge bg-info text-dark">{{ prog.carrera_nombre }}</span>
+                                </td>
+                                <td>
+                                    <i class="bi bi-clock text-primary"></i> {{ prog.horario_full }}
+                                    <br>
+                                    <small class="text-muted"><i class="bi bi-door-open"></i> Salón {{ prog.salon_codigo }}</small>
+                                </td>
+                                <td>
+                                    {{ prog.sede_nombre }}<br>
+                                    <small class="text-muted">{{ prog.jornada_nombre }}</small>
+                                </td>
+                                <td>{{ prog.catedratico_nombre }} {{ prog.catedratico_apellido }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                                    No hay programaciones académicas disponibles.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterSede = document.getElementById('filterSede');
+    const filterJornada = document.getElementById('filterJornada');
+    const filterCarrera = document.getElementById('filterCarrera');
+    const filterSeccion = document.getElementById('filterSeccion');
+    const courseRows = document.querySelectorAll('.course-row, .doc-course-row');
+    const selectAllBtn = document.getElementById('selectAll');
+    const courseCheckboxes = document.querySelectorAll('.course-checkbox');
+    const docCourseRadios = document.querySelectorAll('.doc-course-radio');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const docSelectedCountSpan = document.getElementById('docSelectedCount');
+    const btnInscribir = document.getElementById('btnInscribir');
+    const btnAsignarDocente = document.getElementById('btnAsignarDocente');
+    const carnetSedeSelect = document.getElementById('carnetSedeSelect');
+    const carnetSedeValue = document.getElementById('carnetSedeValue');
+    const carnetsSede = {{ carnets_by_sede|tojson if carnets_by_sede is defined else '{}' }};
+
+    function syncCarnetInput() {
+        if (!carnetSedeSelect || !carnetSedeValue) {
+            return;
+        }
+        carnetSedeValue.value = carnetsSede[carnetSedeSelect.value] || '';
+    }
+
+    if (carnetSedeSelect && carnetSedeValue) {
+        carnetSedeSelect.addEventListener('change', syncCarnetInput);
+        carnetSedeValue.addEventListener('input', function() {
+            carnetsSede[carnetSedeSelect.value] = this.value.trim();
+        });
+        syncCarnetInput();
+    }
+
+    // Apply filters
+    function applyFilters() {
+        const sedeVal = filterSede.value.trim().toLowerCase();
+        const jornadaVal = filterJornada.value.trim().toLowerCase();
+        const carreraVal = filterCarrera.value.trim().toLowerCase();
+        const seccionVal = filterSeccion.value.trim().toLowerCase();
+        
+        if (carnetSedeSelect && filterSede.selectedOptions.length > 0) {
+            const selectedSedeId = filterSede.selectedOptions[0].dataset.sedeId;
+            if (selectedSedeId && carnetSedeSelect.value !== selectedSedeId) {
+                carnetSedeSelect.value = selectedSedeId;
+                syncCarnetInput();
+            }
+        }
+        
+        courseRows.forEach(row => {
+            const rowSede = (row.dataset.sede || '').trim().toLowerCase();
+            const rowJornada = (row.dataset.jornada || '').trim().toLowerCase();
+            const rowCarrera = (row.dataset.carrera || '').trim().toLowerCase();
+            const rowSeccion = (row.dataset.seccion || '').trim().toLowerCase();
+            
+            const matchSede = !sedeVal || rowSede === sedeVal;
+            const matchJornada = !jornadaVal || rowJornada === jornadaVal;
+            const matchCarrera = !carreraVal || rowCarrera === carreraVal;
+            const matchSeccion = !seccionVal || rowSeccion === seccionVal;
+            
+            const isFilterActive = sedeVal !== '' || jornadaVal !== '' || carreraVal !== '' || seccionVal !== '';
+            const visible = isFilterActive && matchSede && matchJornada && matchCarrera && matchSeccion;
+            
+            row.style.display = visible ? '' : 'none';
+            const selectable = row.querySelector('.course-checkbox, .doc-course-radio');
+            if (selectable && !visible) {
+                selectable.checked = false;
+            }
+        });
+        updateCount();
+        updateDocCount();
+    }
+    
+    filterSede.addEventListener('change', applyFilters);
+    filterJornada.addEventListener('change', applyFilters);
+    filterCarrera.addEventListener('change', applyFilters);
+    filterSeccion.addEventListener('change', applyFilters);
+    
+    // Selection logic
+    function syncFiltersFromRow(row) {
+        if (!row) return;
+        const sede = row.dataset.sede || '';
+        const jornada = row.dataset.jornada || '';
+        const carrera = row.dataset.carrera || '';
+        const seccion = row.dataset.seccion || '';
+        
+        let changed = false;
+        
+        if (sede && filterSede.value !== sede) {
+            filterSede.value = sede;
+            changed = true;
+        }
+        if (jornada && filterJornada.value !== jornada) {
+            filterJornada.value = jornada;
+            changed = true;
+        }
+        if (carrera && filterCarrera.value !== carrera) {
+            filterCarrera.value = carrera;
+            changed = true;
+        }
+        if (seccion && filterSeccion.value !== seccion) {
+            filterSeccion.value = seccion;
+            changed = true;
+        }
+        
+        if (changed) {
+            applyFilters();
+        }
+    }
+
+    function updateCount() {
+        if (!selectedCountSpan) {
+            return;
+        }
+        const selected = document.querySelectorAll('.course-checkbox:checked').length;
+        selectedCountSpan.textContent = `${selected} seleccionados`;
+    }
+
+    function updateDocCount() {
+        if (!docSelectedCountSpan) {
+            return;
+        }
+        const selected = document.querySelectorAll('.doc-course-radio:checked').length;
+        docSelectedCountSpan.textContent = `${selected} seleccionados`;
+    }
+    
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('change', function() {
+            const isChecked = this.checked;
+            courseCheckboxes.forEach(cb => {
+                const row = cb.closest('tr');
+                if (!row || row.style.display !== 'none') {
+                    cb.checked = isChecked;
+                }
+            });
+            updateCount();
+            if (isChecked && courseCheckboxes.length > 0) {
+                // Find first visible checked to sync
+                const firstChecked = document.querySelector('.course-checkbox:checked');
+                if (firstChecked) syncFiltersFromRow(firstChecked.closest('tr'));
+            }
+        });
+    }
+    
+    courseCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            updateCount();
+            if (this.checked) {
+                syncFiltersFromRow(this.closest('tr'));
+            }
+        });
+    });
+
+    docCourseRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateDocCount();
+            if (this.checked) {
+                syncFiltersFromRow(this.closest('tr'));
+            }
+        });
+    });
+    
+    if (!btnInscribir) {
+        applyFilters();
+    } else {
+        // Enrollment
+        btnInscribir.addEventListener('click', async function() {
+            const selectedCheckboxes = Array.from(document.querySelectorAll('.course-checkbox:checked'));
+            const selectedIds = selectedCheckboxes.map(cb => parseInt(cb.value));
+                                    
+            if (selectedIds.length === 0) {
+                Swal.fire('Atención', 'Primero seleccione sede, jornada y carrera; luego elija al menos un curso.', 'warning');
+                return;
+            }
+            
+            // Client-side carnet validation
+            const requiredSedes = new Set();
+            selectedCheckboxes.forEach(cb => {
+                const row = cb.closest('tr');
+                if (row && row.dataset.sedeId) {
+                    requiredSedes.add({ id: row.dataset.sedeId, nombre: row.dataset.sede });
+                }
+            });
+            
+            const missingCarnets = [];
+            requiredSedes.forEach(sede => {
+                if (!carnetsSede[sede.id] || carnetsSede[sede.id].trim() === '') {
+                    missingCarnets.push(sede.nombre);
+                }
+            });
+            
+            if (missingCarnets.length > 0) {
+                Swal.fire('Atención', `Es obligatorio proporcionar un carnet para las siguientes sedes seleccionadas: ${missingCarnets.join(', ')}`, 'warning');
+                return;
+            }
+            
+            try {
+                btnInscribir.disabled = true;
+                btnInscribir.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+                
+                const response = await fetch('/api/inscribir_cursos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        persona_id: {{ persona.id }},
+                        programaciones: selectedIds,
+                        carnets_sede: carnetsSede
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire('¡Éxito!', result.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Hubo un problema al procesar la asignación.', 'error');
+            } finally {
+                btnInscribir.disabled = false;
+                btnInscribir.innerHTML = '<i class="bi bi-check-circle"></i> Confirmar Asignación';
+            }
+        });
+    }
+
+    if (btnAsignarDocente) {
+        btnAsignarDocente.addEventListener('click', async function() {
+            const selected = document.querySelector('.doc-course-radio:checked');
+            if (!selected) {
+                Swal.fire('Atención', 'Seleccione un curso disponible para asignarse.', 'warning');
+                return;
+            }
+
+            const payload = {
+                persona_id: {{ persona.id }},
+                programacion_id: selected.value
+            };
+
+            try {
+                btnAsignarDocente.disabled = true;
+                btnAsignarDocente.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
+                const response = await fetch('/api/asignar_cursos_catedratico', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire('¡Éxito!', result.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Hubo un problema al asignar el curso.', 'error');
+            } finally {
+                btnAsignarDocente.disabled = false;
+                btnAsignarDocente.innerHTML = '<i class="bi bi-journal-check"></i> Asignar Curso';
+            }
+        });
+    }
+
+    updateDocCount();
+});
+</script>
+{% endblock %}

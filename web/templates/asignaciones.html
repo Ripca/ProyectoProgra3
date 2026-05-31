@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Asignaciones - UMG{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: var(--umg-navy);">
+                    <i class="bi bi-person-lines-fill"></i> Asignaciones por Persona
+                </h3>
+                <p class="text-muted mb-0">Seleccione una persona para completar o revisar su asignación académica.</p>
+            </div>
+            <a href="{{ url_for('registro_facial') }}" class="btn btn-primary align-self-md-center">
+                <i class="bi bi-person-plus-fill"></i> Nueva Persona
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-light">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input id="personaSearch" class="form-control" type="search" placeholder="Buscar por nombre, carnet, correo o tipo">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="tipoFilter" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    <option value="estudiante">Estudiantes</option>
+                    <option value="catedratico">Catedráticos</option>
+                    <option value="administrativo">Administrativos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Persona</th>
+                    <th>Carnet</th>
+                    <th>Correo</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="personasTable">
+                {% for persona in personas %}
+                {% set tipo = persona.tipo_persona_nombre or 'Sin tipo' %}
+                <tr class="persona-row" data-text="{{ (persona.nombre ~ ' ' ~ persona.apellido ~ ' ' ~ (persona.codigo_carnet or '') ~ ' ' ~ persona.email ~ ' ' ~ tipo) | lower }}" data-tipo="{{ tipo | lower }}">
+                    <td>
+                        <div class="fw-semibold">{{ persona.nombre }} {{ persona.apellido }}</div>
+                    </td>
+                    <td>{{ persona.codigo_carnet or ('N/A' if 'catedr' in (tipo | lower) else 'Pendiente') }}</td>
+                    <td>{{ persona.email }}</td>
+                    <td><span class="badge bg-secondary">{{ tipo }}</span></td>
+                    <td class="text-end">
+                        <a href="{{ url_for('asignacion_academica', persona_id=persona.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-journal-plus"></i> Gestionar
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">No hay personas registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const search = document.getElementById('personaSearch');
+    const tipoFilter = document.getElementById('tipoFilter');
+    const rows = document.querySelectorAll('.persona-row');
+
+    function applyFilters() {
+        const term = search.value.trim().toLowerCase();
+        const tipo = tipoFilter.value;
+        rows.forEach(row => {
+            const matchesText = !term || row.dataset.text.includes(term);
+            const matchesTipo = !tipo || row.dataset.tipo.includes(tipo);
+            row.style.display = matchesText && matchesTipo ? '' : 'none';
+        });
+    }
+
+    search.addEventListener('input', applyFilters);
+    tipoFilter.addEventListener('change', applyFilters);
+});
+</script>
+{% endblock %}

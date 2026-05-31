@@ -29,17 +29,10 @@ CREATE TABLE `cursos` (
   `codigo` varchar(30) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
-  `salon_id` int NOT NULL,
-  `catedratico_id` int NOT NULL,
-  `horario` varchar(100) DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `codigo` (`codigo`),
-  KEY `fk_cursos_salon` (`salon_id`),
-  KEY `fk_cursos_catedratico` (`catedratico_id`),
-  CONSTRAINT `fk_cursos_catedratico` FOREIGN KEY (`catedratico_id`) REFERENCES `personas` (`id`),
-  CONSTRAINT `fk_cursos_salon` FOREIGN KEY (`salon_id`) REFERENCES `salones` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `codigo` (`codigo`)
+) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,7 +41,7 @@ CREATE TABLE `cursos` (
 
 LOCK TABLES `cursos` WRITE;
 /*!40000 ALTER TABLE `cursos` DISABLE KEYS */;
-INSERT INTO `cursos` VALUES (1,'MAT101','Matematica 1','Curso basico',1,3,'08:00-10:00',1),(2,'PROG101','Programacion','Intro a programacion',2,3,'10:00-12:00',1),(3,'FIS101','Fisica 1','Fundamentos',3,3,'13:00-15:00',1);
+INSERT INTO `cursos` VALUES (1,'MAT101','Matematica 1','Curso basico de matematica',1),(2,'PROG101','Programacion 1','Introduccion a la programacion',1),(3,'FIS101','Fisica 1','Fundamentos de fisica',1),(76,'BD101','Bases de Datos 1','Modelo relacional y SQL',1),(77,'WEB101','Desarrollo Web','Aplicaciones web modernas',1),(78,'ADM101','Administracion 1','Fundamentos de administracion',1),(79,'MAT201','Matematica 2','Curso de SISTEMAS',1),(80,'PROG201','Programacion 2','Curso de SISTEMAS',1),(81,'BD201','Bases de Datos 2','Curso de SISTEMAS',1),(82,'WEB201','Desarrollo Web Avanzado','Curso de SISTEMAS',1),(83,'ADM201','Administracion 2','Curso de ADMINISTRACION',1),(84,'MER201','Mercadotecnia 2','Curso de ADMINISTRACION',1),(85,'FIN201','Finanzas 2','Curso de ECONOMIA',1),(86,'ECO201','Microeconomia','Curso de ECONOMIA',1),(87,'DER101','Derecho Empresarial','Curso de DERECHO',1),(88,'PSI101','Psicologia General','Curso de PSICOLOGIA',1),(89,'AUD101','Auditoria 1','Curso de AUDITORIA',1),(90,'CON201','Contabilidad 2','Curso de AUDITORIA',1);
 /*!40000 ALTER TABLE `cursos` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -61,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-01 22:38:42
+-- Dump completed on 2026-05-30 20:24:56

@@ -40,6 +40,42 @@
         border-radius: 15px;
         pointer-events: none;
         box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+        transition: border-color 0.3s;
+    }
+
+    .live-feedback {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0.65rem 0.9rem;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        line-height: 1.25;
+        text-align: center;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    .live-feedback.is-neutral {
+        background: rgba(108, 117, 125, 0.92);
+    }
+
+    .live-feedback.is-success {
+        background: rgba(25, 135, 84, 0.94);
+    }
+
+    .live-feedback.is-warning {
+        background: rgba(255, 193, 7, 0.96);
+        color: #1f2937;
     }
 </style>
 {% endblock %}
@@ -64,26 +100,6 @@
                         </div>
                     </div>
 
-                    <div class="mb-3" id="seccion_container" style="display: none;">
-                        <label for="seccion_id" class="form-label">Sección</label>
-                        <select class="form-select" id="seccion_id">
-                            <option value="">Seleccione una sección...</option>
-                            {% for sec in secciones %}
-                            <option value="{{ sec.id }}">{{ sec.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="mb-3" id="carrera_container" style="display: none;">
-                        <label for="carrera_id" class="form-label">Carrera</label>
-                        <select class="form-select" id="carrera_id">
-                            <option value="">Seleccione una carrera...</option>
-                            {% for car in carreras %}
-                            <option value="{{ car.id }}">{{ car.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Institucional</label>
                         <input type="email" class="form-control" id="email" required pattern=".*@miumg\.edu\.gt$"
@@ -97,11 +113,10 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="codigo_carnet" class="form-label">Carnet / ID</label>
-                            <input type="text" class="form-control" id="codigo_carnet" required
+                            <input type="text" class="form-control" id="codigo_carnet"
                                 placeholder="0000-00-0000">
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <label for="tipo_persona" class="form-label">Tipo de Usuario</label>
                         <select class="form-select" id="tipo_persona" required>
@@ -128,14 +143,21 @@
                 <h4><i class="bi bi-camera"></i> Identificación Facial</h4>
             </div>
             <div class="card-body">
-                <div class="camera-container mb-4">
+                <div class="mb-3">
+                    <label class="form-label">Seleccionar Cámara</label>
+                    <select id="cameraSelect" class="form-select">
+                        <option value="">Cámara por defecto</option>
+                    </select>
+                </div>
+                <div class="camera-container mb-4 position-relative">
                     <video id="video" autoplay playsinline></video>
                     <canvas id="canvas"></canvas>
-                    <div class="overlay"></div>
+                    <div class="overlay" id="faceOverlay"></div>
+                    <div id="liveFeedback" class="live-feedback is-neutral">Esperando cámara...</div>
                 </div>
 
                 <div id="captureControls">
-                    <button type="button" id="btnTomarFoto" class="btn btn-primary btn-lg w-100 mb-4">
+                    <button type="button" id="btnTomarFoto" class="btn btn-primary btn-lg w-100 mb-4" disabled>
                         <i class="bi bi-camera-fill"></i> Tomar Fotografía
                     </button>
 
@@ -182,89 +204,203 @@
     const btnRetomarFoto = document.getElementById('btnRetomarFoto');
     const btnGuardar = document.getElementById('btnGuardar');
     const actionButtons = document.getElementById('actionButtons');
+    const tipoPersonaSelect = document.getElementById('tipo_persona');
+    const carnetInput = document.getElementById('codigo_carnet');
 
     let isPhotoTaken = false;
     let imageData = null;
+    let liveTimer = null;
+    let isLiveValid = false;
+    const faceOverlay = document.getElementById('faceOverlay');
+    const liveFeedback = document.getElementById('liveFeedback');
+    const cameraSelect = document.getElementById('cameraSelect');
 
-    // Access camera
-    async function startCamera() {
+    // Poblar lista de cámaras
+    async function initCameras() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-        } catch (err) {
-            console.error("Error accessing camera:", err);
-            Swal.fire('Error', 'No se pudo acceder a la cámara', 'error');
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            
+            if (videoDevices.length > 0) {
+                cameraSelect.innerHTML = '<option value="">Cámara por defecto</option>';
+                videoDevices.forEach((device, index) => {
+                    const option = new Option(device.label || `Cámara ${index + 1}`, device.deviceId);
+                    cameraSelect.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('Error listing cameras:', e);
         }
     }
+    
+    // Pedir permisos primero para obtener los nombres de las cámaras
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(tempStream => {
+            tempStream.getTracks().forEach(t => t.stop());
+            initCameras();
+        })
+        .catch(err => {
+            console.warn('Permisos de cámara no otorgados inicialmente:', err);
+            initCameras();
+        });
 
-    startCamera();
+    cameraSelect.addEventListener('change', () => {
+        startCamera();
+    });
 
-    // Handle show/hide of seccion and carrera based on tipo_persona
-    const tipoPersonaSelect = document.getElementById('tipo_persona');
-    const seccionContainer = document.getElementById('seccion_container');
-    const seccionInput = document.getElementById('seccion_id');
-    const carreraContainer = document.getElementById('carrera_container');
-    const carreraInput = document.getElementById('carrera_id');
-
-    function toggleEstudianteFields() {
-        const selectedText = tipoPersonaSelect.options[tipoPersonaSelect.selectedIndex].text.toLowerCase();
-        if (selectedText.includes('estudiante') || selectedText.includes('alumno')) {
-            seccionContainer.style.display = 'block';
-            seccionInput.required = true;
-            carreraContainer.style.display = 'block';
-            carreraInput.required = true;
+    function updateCarnetRequirement() {
+        const selectedText = tipoPersonaSelect.options[tipoPersonaSelect.selectedIndex]?.textContent.toLowerCase() || '';
+        const isStudent = selectedText.includes('estudiante');
+        const isCatedratico = selectedText.includes('catedr');
+        carnetInput.required = true;
+        if (isStudent) {
+            carnetInput.placeholder = '0000-00-0000';
+        } else if (isCatedratico) {
+            carnetInput.placeholder = 'Ej: CAT-2024-001';
         } else {
-            seccionContainer.style.display = 'none';
-            seccionInput.required = false;
-            seccionInput.value = ''; // Reset value
-            carreraContainer.style.display = 'none';
-            carreraInput.required = false;
-            carreraInput.value = ''; // Reset value
+            carnetInput.placeholder = 'Código de identificación';
         }
     }
 
-    tipoPersonaSelect.addEventListener('change', toggleEstudianteFields);
-    // Initialize on load
-    toggleEstudianteFields();
+    tipoPersonaSelect.addEventListener('change', updateCarnetRequirement);
+    updateCarnetRequirement();
 
-    btnTomarFoto.addEventListener('click', () => {
-        // 3. Capture Image from Video (Center Crop with 22:28 Aspect Ratio)
-        const context = canvas.getContext('2d');
+    function setLiveFeedback(message, state = 'neutral') {
+        liveFeedback.textContent = message;
+        liveFeedback.className = `live-feedback is-${state}`;
+    }
+
+    function buildRegistrationCanvas() {
+        const tempCanvas = document.createElement('canvas');
         const videoRatio = video.videoWidth / video.videoHeight;
-        const targetRatio = 22 / 28; // ID Card Photo Ratio
+        const targetRatio = 22 / 28;
 
         let sourceWidth, sourceHeight, sourceX, sourceY;
 
         if (videoRatio > targetRatio) {
-            // Video is wider than target -> Crop width (pillarbox)
             sourceHeight = video.videoHeight;
             sourceWidth = sourceHeight * targetRatio;
             sourceX = (video.videoWidth - sourceWidth) / 2;
             sourceY = 0;
         } else {
-            // Video is taller than target -> Crop height (letterbox) - unlikely for webcam
             sourceWidth = video.videoWidth;
             sourceHeight = sourceWidth / targetRatio;
             sourceX = 0;
             sourceY = (video.videoHeight - sourceHeight) / 2;
         }
 
-        // Set canvas to the cropped size (or a reasonable multiple)
-        canvas.width = sourceWidth;
-        canvas.height = sourceHeight;
+        tempCanvas.width = sourceWidth;
+        tempCanvas.height = sourceHeight;
+        tempCanvas.getContext('2d').drawImage(
+            video,
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            0,
+            0,
+            tempCanvas.width,
+            tempCanvas.height
+        );
+        return tempCanvas;
+    }
 
-        // Draw cropped image
-        context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+    async function validateImageData(image) {
+        const response = await fetch('/api/validar_rostro_vivo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image })
+        });
+        return response.json();
+    }
 
-        imageData = canvas.toDataURL('image/jpeg');
+    async function processLiveFrame() {
+        if (isPhotoTaken || video.readyState < 2) return;
+        
+        try {
+            const tempCanvas = buildRegistrationCanvas();
+            const result = await validateImageData(tempCanvas.toDataURL('image/jpeg', 0.95));
+            
+            isLiveValid = result.success;
+            const feedbackMessage = result.message || (isLiveValid ? "¡Rostro perfecto!" : "Validando...");
+            
+            if (isLiveValid) {
+                setLiveFeedback(feedbackMessage, 'success');
+                faceOverlay.style.borderColor = "#198754";
+                btnTomarFoto.disabled = false;
+            } else {
+                setLiveFeedback(feedbackMessage, 'warning');
+                faceOverlay.style.borderColor = "#ffc107";
+                btnTomarFoto.disabled = true;
+            }
+        } catch (e) {
+            console.error("Error en validación en vivo", e);
+        }
+    }
+
+    // Access camera
+    async function startCamera() {
+        if (liveTimer) clearInterval(liveTimer);
+        try {
+            const videoConstraints = cameraSelect.value 
+                ? { deviceId: { exact: cameraSelect.value } } 
+                : { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' };
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: videoConstraints
+            });
+            video.srcObject = stream;
+            setLiveFeedback("Analizando...", 'neutral');
+            liveTimer = setInterval(processLiveFrame, 1500);
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            Swal.fire('Error', 'No se pudo acceder a la cámara', 'error');
+            setLiveFeedback("Cámara no disponible", 'warning');
+        }
+    }
+
+    startCamera();
+
+    btnTomarFoto.addEventListener('click', async () => {
+        btnTomarFoto.disabled = true;
+        btnTomarFoto.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Validando...';
+
+        const captureCanvas = buildRegistrationCanvas();
+        const capturedImage = captureCanvas.toDataURL('image/jpeg', 0.95);
+
+        try {
+            const result = await validateImageData(capturedImage);
+            if (!result.success) {
+                isLiveValid = false;
+                setLiveFeedback(result.message || 'La fotografía no cumple con la calidad requerida.', 'warning');
+                faceOverlay.style.borderColor = "#ffc107";
+                btnTomarFoto.innerHTML = '<i class="bi bi-camera-fill"></i> Tomar Fotografía';
+                btnTomarFoto.disabled = true;
+                return;
+            }
+        } catch (error) {
+            console.error("Error validando captura", error);
+            Swal.fire('Error', 'No se pudo validar la fotografía. Intente nuevamente.', 'error');
+            btnTomarFoto.innerHTML = '<i class="bi bi-camera-fill"></i> Tomar Fotografía';
+            btnTomarFoto.disabled = false;
+            return;
+        }
+
+        canvas.width = captureCanvas.width;
+        canvas.height = captureCanvas.height;
+        canvas.getContext('2d').drawImage(captureCanvas, 0, 0);
+
+        imageData = capturedImage;
         isPhotoTaken = true;
 
         // Update UI
         video.style.display = 'none';
         canvas.style.display = 'block';
+        liveFeedback.style.display = 'none';
 
         btnTomarFoto.style.display = 'none';
         actionButtons.style.display = 'flex';
+        btnTomarFoto.innerHTML = '<i class="bi bi-camera-fill"></i> Tomar Fotografía';
     });
 
     btnRetomarFoto.addEventListener('click', () => {
@@ -273,6 +409,10 @@
 
         video.style.display = 'block';
         canvas.style.display = 'none';
+        liveFeedback.style.display = 'block';
+        setLiveFeedback("Analizando...", 'neutral');
+        faceOverlay.style.borderColor = "rgba(255, 255, 255, 0.6)";
+        btnTomarFoto.disabled = true;
 
         btnTomarFoto.style.display = 'block';
         actionButtons.style.display = 'none';
@@ -313,8 +453,6 @@
             telefono: document.getElementById('telefono').value,
             codigo_carnet: document.getElementById('codigo_carnet').value,
             tipo_persona: document.getElementById('tipo_persona').value,
-            seccion_id: document.getElementById('seccion_id').value,
-            carrera_id: document.getElementById('carrera_id').value,
             restriccion_ingreso: document.getElementById('restriccion_ingreso').checked,
             image: imageData,
             firma: signatureData
@@ -335,9 +473,12 @@
 
             if (result.success) {
                 Swal.fire('Éxito', result.message, 'success').then(() => {
-                    window.location.reload();
+                    window.location.href = `/asignacion_academica/${result.persona_id}`;
                 });
             } else {
+                if (result.raw_error) {
+                    console.error("Backend Error Details:", result.raw_error);
+                }
                 Swal.fire('Error', result.message, 'error');
             }
         } catch (err) {

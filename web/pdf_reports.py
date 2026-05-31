@@ -64,6 +64,7 @@ class PDFReportGenerator:
             
             # --- Course Information Block ---
             curso = attendance_data['curso']
+            assignment = attendance_data.get('assignment', {})
             rect_y = height - 230
             c.setStrokeColorRGB(0, 0, 0)
             c.setFillColorRGB(0.95, 0.95, 0.95)
@@ -71,31 +72,46 @@ class PDFReportGenerator:
             c.setFillColorRGB(0, 0, 0)
             
             # Left Column
-            c.setFont("Helvetica-Bold", 10)
-            c.drawString(50, rect_y + 60, "CURSO:")
-            c.setFont("Helvetica", 10)
-            c.drawString(100, rect_y + 60, f"{curso['nombre']} [{curso['codigo']}]")
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(50, rect_y + 65, "CURSO:")
+            c.setFont("Helvetica", 9)
+            c.drawString(100, rect_y + 65, f"{curso['nombre']} [{curso['codigo']}] - Sec {attendance_data.get('seccion', '')}")
             
-            c.setFont("Helvetica-Bold", 10)
-            c.drawString(50, rect_y + 40, "CATEDRÁTICO:")
-            c.setFont("Helvetica", 10)
-            c.drawString(130, rect_y + 40, f"{curso.get('catedratico_nombre', '')} {curso.get('catedratico_apellido', '')}")
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(50, rect_y + 45, "CATEDRÁTICO:")
+            c.setFont("Helvetica", 9)
+            c.drawString(130, rect_y + 45, f"{assignment.get('catedratico_nombre', '')} {assignment.get('catedratico_apellido', '')}")
             
-            c.setFont("Helvetica-Bold", 10)
-            c.drawString(50, rect_y + 20, "SALÓN:")
-            c.setFont("Helvetica", 10)
-            c.drawString(100, rect_y + 20, str(curso.get('salon', 'N/A')))
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(50, rect_y + 25, "CARRERA:")
+            c.setFont("Helvetica", 9)
+            c.drawString(110, rect_y + 25, str(assignment.get('carrera_nombre', 'N/A')))
+            
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(50, rect_y + 5, "SALÓN:")
+            c.setFont("Helvetica", 9)
+            c.drawString(100, rect_y + 5, str(attendance_data.get('salon', 'N/A')))
             
             # Right Column
-            c.setFont("Helvetica-Bold", 10)
-            c.drawString(350, rect_y + 60, "FECHA:")
-            c.setFont("Helvetica", 10)
-            c.drawString(450, rect_y + 60, attendance_data['fecha'].strftime('%d de %B de %Y'))
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(350, rect_y + 65, "SEDE:")
+            c.setFont("Helvetica", 9)
+            c.drawString(390, rect_y + 65, str(assignment.get('sede_nombre', 'N/A')))
             
-            c.setFont("Helvetica-Bold", 10)
-            c.drawString(350, rect_y + 40, "HORA REPORTE:")
-            c.setFont("Helvetica", 10)
-            c.drawString(450, rect_y + 40, datetime.now().strftime('%H:%M:%S'))
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(350, rect_y + 45, "JORNADA:")
+            c.setFont("Helvetica", 9)
+            c.drawString(410, rect_y + 45, str(assignment.get('jornada_nombre', 'N/A')))
+            
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(350, rect_y + 25, "FECHA:")
+            c.setFont("Helvetica", 9)
+            c.drawString(400, rect_y + 25, attendance_data['fecha'].strftime('%d de %B de %Y'))
+            
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(350, rect_y + 5, "HORA REPORTE:")
+            c.setFont("Helvetica", 9)
+            c.drawString(440, rect_y + 5, datetime.now().strftime('%H:%M:%S'))
 
             # --- Statistics Summary ---
             stats = attendance_data['estadisticas']

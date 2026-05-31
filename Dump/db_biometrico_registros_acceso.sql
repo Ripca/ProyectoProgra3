@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS `registros_acceso`;
 CREATE TABLE `registros_acceso` (
   `id` int NOT NULL AUTO_INCREMENT,
   `persona_id` int NOT NULL,
+  `sede_id` int DEFAULT NULL,
   `fecha_hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `punto_acceso` enum('ENTRADA_PRINCIPAL','SALIDA_PRINCIPAL','OTRO') NOT NULL DEFAULT 'ENTRADA_PRINCIPAL',
   `metodo` enum('BIOMETRICO','MANUAL') NOT NULL DEFAULT 'BIOMETRICO',
@@ -34,8 +35,9 @@ CREATE TABLE `registros_acceso` (
   PRIMARY KEY (`id`),
   KEY `idx_acceso_fecha` (`fecha_hora`),
   KEY `idx_acceso_persona_fecha` (`persona_id`,`fecha_hora`),
+  KEY `idx_registros_sede_fecha` (`sede_id`,`fecha_hora`),
   CONSTRAINT `fk_registros_acceso_persona` FOREIGN KEY (`persona_id`) REFERENCES `personas` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,7 +46,7 @@ CREATE TABLE `registros_acceso` (
 
 LOCK TABLES `registros_acceso` WRITE;
 /*!40000 ALTER TABLE `registros_acceso` DISABLE KEYS */;
-INSERT INTO `registros_acceso` VALUES (1,1,'2026-04-30 06:10:09','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(2,2,'2026-04-30 06:10:09','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(3,3,'2026-04-30 06:10:09','SALIDA_PRINCIPAL','MANUAL',NULL),(4,1,'2026-04-30 06:10:18','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(5,2,'2026-04-30 06:10:18','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(6,3,'2026-04-30 06:10:18','SALIDA_PRINCIPAL','MANUAL',NULL);
+INSERT INTO `registros_acceso` VALUES (1,1,1,'2026-04-30 06:10:09','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(4,1,1,'2026-04-30 06:10:18','ENTRADA_PRINCIPAL','BIOMETRICO',NULL),(41,67,1,'2026-05-31 00:25:59','ENTRADA_PRINCIPAL','BIOMETRICO','Reconocimiento desde portal web'),(43,67,1,'2026-05-31 00:26:24','OTRO','BIOMETRICO','Salón LAB1 - Programacion 1');
 /*!40000 ALTER TABLE `registros_acceso` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -57,4 +59,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-01 22:38:40
+-- Dump completed on 2026-05-30 20:24:57

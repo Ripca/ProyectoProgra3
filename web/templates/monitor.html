@@ -140,18 +140,25 @@
 <div class="card border-0 shadow-sm overflow-hidden">
     <div class="card-body p-0">
         <!-- Header -->
-        <div class="p-4 bg-white border-bottom d-flex justify-content-between align-items-center">
+        <div class="p-4 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <h3 class="fw-bold mb-1" style="color: var(--umg-navy);">
                     <i class="bi bi-display me-2 text-primary"></i> Monitor de Campus
                 </h3>
-                <p class="text-muted mb-0">Sede Boca del Monte • {{ data.fecha.strftime('%d/%m/%Y') if data.search_performed else 'Por buscar...' }}</p>
+                <p class="text-muted mb-0">{{ data.sede_nombre or 'Seleccione sede' }} • {{ data.fecha.strftime('%d/%m/%Y') if data.search_performed else 'Por buscar...' }}</p>
             </div>
-            <div class="d-flex align-items-center gap-3">
-                <form method="GET" action="{{ url_for('monitor_global') }}" class="d-flex align-items-center mb-0 bg-light p-2 rounded-3 shadow-sm">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <form method="GET" action="{{ url_for('monitor_global') }}" class="d-flex align-items-center flex-wrap gap-2 mb-0 bg-light p-2 rounded-3 shadow-sm">
+                    <label for="sede_id" class="me-2 text-muted mb-0 fw-semibold">Sede:</label>
+                    <select id="sede_id" name="sede_id" class="form-select form-select-sm bg-white" required style="width: 260px; font-weight: 600;">
+                        <option value="">Seleccione sede</option>
+                        {% for sede in data.sedes %}
+                        <option value="{{ sede.id }}" {% if data.selected_sede_id == sede.id %}selected{% endif %}>{{ sede.nombre }}</option>
+                        {% endfor %}
+                    </select>
                     <label for="fecha" class="me-2 text-muted mb-0 fw-semibold">Fecha:</label>
-                    <input type="date" id="fecha" name="fecha" class="form-control form-control-sm border-0 bg-transparent" value="{{ data.fecha.strftime('%Y-%m-%d') if data.search_performed else '' }}" required style="max-width: 150px; font-weight: 600;">
-                    <button type="submit" class="btn btn-sm btn-primary ms-2 px-3 rounded-2 fw-bold">
+                    <input type="date" id="fecha" name="fecha" class="form-control form-control-sm bg-white" value="{{ data.fecha.strftime('%Y-%m-%d') if data.search_performed else '' }}" required style="width: 155px; font-weight: 600;">
+                    <button type="submit" class="btn btn-sm btn-primary px-3 rounded-2 fw-bold">
                         <i class="bi bi-search"></i> BUSCAR
                     </button>
                 </form>

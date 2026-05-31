@@ -18,6 +18,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/umg_theme.css') }}">
     
     <!-- SweetAlert2 -->
+    <script>
+        (function () {
+            const nativeRemoveChild = Node.prototype.removeChild;
+            Node.prototype.removeChild = function (child) {
+                if (child && child.parentNode && child.parentNode !== this) {
+                    return nativeRemoveChild.call(child.parentNode, child);
+                }
+
+                if (!child || child.parentNode !== this) {
+                    return child;
+                }
+
+                return nativeRemoveChild.call(this, child);
+            };
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {% block extra_css %}{% endblock %}
@@ -47,6 +63,25 @@
                             <i class="bi bi-building-check"></i> Monitor Global
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('mi_asignacion') }}">
+                            <i class="bi bi-journal-bookmark-fill"></i> Mis Cursos
+                        </a>
+                    </li>
+                    {% set nav_role = session.get('role', '') | lower %}
+                    {% set nav_tipo = session.get('tipo_persona', '') | lower %}
+                    {% if nav_role in ['admin', 'administrativo', 'catedratico', 'catedrático'] or nav_tipo in ['admin', 'administrativo', 'catedratico', 'catedrático'] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('reconocimiento') }}">
+                            <i class="bi bi-camera-video"></i> Reconocimiento
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('asignaciones') }}">
+                            <i class="bi bi-person-lines-fill"></i> Asignaciones
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                             data-bs-toggle="dropdown">

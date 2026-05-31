@@ -1,0 +1,442 @@
+{% extends 'base.html' %}
+
+{% block title %}Reconocimiento Facial - UMG{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recognition-video-wrap {
+        position: relative;
+        background: #111827;
+        border-radius: 8px;
+        overflow: hidden;
+        min-height: 420px;
+    }
+
+    #recognitionVideo,
+    #recognitionCanvas {
+        width: 100%;
+        height: 100%;
+        min-height: 420px;
+        object-fit: cover;
+        display: block;
+    }
+
+    #recognitionCanvas {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        display: inline-block;
+        background: #6c757d;
+    }
+
+    .status-dot.active {
+        background: #198754;
+        box-shadow: 0 0 0 6px rgba(25, 135, 84, 0.12);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                    <div>
+                        <h3 class="fw-bold mb-1" style="color: var(--umg-navy);">
+                            <i class="bi bi-camera-video"></i> Reconocimiento Facial
+                        </h3>
+                        <p class="text-muted mb-0">Control biometrico para entrada por sede o asistencia de clase.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="statusDot" class="status-dot"></span>
+                        <span id="statusText" class="fw-semibold text-muted">Inactivo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="recognition-video-wrap">
+                    <video id="recognitionVideo" autoplay playsinline muted></video>
+                    <canvas id="recognitionCanvas"></canvas>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 p-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <button id="btnStart" class="btn btn-success">
+                        <i class="bi bi-play-fill"></i> Iniciar
+                    </button>
+                    <button id="btnStop" class="btn btn-outline-danger" disabled>
+                        <i class="bi bi-stop-fill"></i> Detener
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-sliders"></i> Contexto</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Cámara</label>
+                    <select id="cameraSelect" class="form-select">
+                        <option value="">Cámara por defecto</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Modo</label>
+                    <select id="recognitionMode" class="form-select">
+                        <option value="general">Entrada general</option>
+                        <option value="clase">Asistencia de clase</option>
+                    </select>
+                </div>
+
+                <div id="generalPicker">
+                    <label class="form-label">Sede de entrada</label>
+                    <select id="generalSedeId" class="form-select">
+                        <option value="">Seleccione sede</option>
+                        {% for sede in sedes %}
+                        <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="d-none" id="classPicker">
+                    <div class="mb-3">
+                        <label class="form-label">Sede</label>
+                        <select id="classSedeId" class="form-select">
+                            <option value="">Seleccione sede</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jornada</label>
+                        <select id="classJornada" class="form-select" disabled>
+                            <option value="">Seleccione jornada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Seccion</label>
+                        <select id="classSeccion" class="form-select" disabled>
+                            <option value="">Seleccione seccion</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Curso</label>
+                        <select id="classCurso" class="form-select" disabled>
+                            <option value="">Seleccione curso</option>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Clase</label>
+                        <select id="assignmentId" class="form-select" disabled>
+                            <option value="">Seleccione clase</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const assignments = [
+        {% for curso in cursos %}
+        {
+            id: {{ curso.assignment_id }},
+            sedeId: {{ curso.sede_id }},
+            sede: {{ curso.sede_nombre|tojson }},
+            jornada: {{ curso.jornada_nombre|tojson }},
+            seccion: {{ curso.seccion_nombre|tojson }},
+            cursoCodigo: {{ curso.curso_codigo|tojson }},
+            cursoNombre: {{ curso.curso_nombre|tojson }},
+            label: {{ (curso.sede_nombre ~ ' | ' ~ curso.jornada_nombre ~ ' | ' ~ curso.curso_nombre ~ ' - Seccion ' ~ curso.seccion_nombre ~ ' | ' ~ curso.horario_full)|tojson }}
+        },
+        {% endfor %}
+    ];
+
+    async function loadFaces() {
+        try {
+            await fetch('/api/reconocimiento/recargar', { method: 'POST' });
+        } catch (error) {
+            console.error('Error loading faces:', error);
+        }
+    }
+    loadFaces();
+
+    const video = document.getElementById('recognitionVideo');
+    const canvas = document.getElementById('recognitionCanvas');
+    const ctx = canvas.getContext('2d');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const modeSelect = document.getElementById('recognitionMode');
+    const generalPicker = document.getElementById('generalPicker');
+    const classPicker = document.getElementById('classPicker');
+    const generalSedeId = document.getElementById('generalSedeId');
+    const classSedeId = document.getElementById('classSedeId');
+    const classJornada = document.getElementById('classJornada');
+    const classSeccion = document.getElementById('classSeccion');
+    const classCurso = document.getElementById('classCurso');
+    const assignmentSelect = document.getElementById('assignmentId');
+    const cameraSelect = document.getElementById('cameraSelect');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    let stream = null;
+    let running = false;
+    let processing = false;
+    let timer = null;
+
+    // Poblar lista de cámaras
+    async function initCameras() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            
+            if (videoDevices.length > 0) {
+                cameraSelect.innerHTML = '';
+                videoDevices.forEach((device, index) => {
+                    const option = new Option(device.label || `Cámara ${index + 1}`, device.deviceId);
+                    cameraSelect.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('Error listing cameras:', e);
+        }
+    }
+    
+    // Pedir permisos primero para obtener los nombres de las cámaras
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(tempStream => {
+            tempStream.getTracks().forEach(t => t.stop());
+            initCameras();
+        })
+        .catch(err => {
+            console.warn('Permisos de cámara no otorgados inicialmente:', err);
+            initCameras();
+        });
+
+    modeSelect.addEventListener('change', () => {
+        const isClass = modeSelect.value === 'clase';
+        generalPicker.classList.toggle('d-none', isClass);
+        classPicker.classList.toggle('d-none', !isClass);
+        stopRecognition();
+    });
+
+    classSedeId.addEventListener('change', updateJornadas);
+    classJornada.addEventListener('change', updateSecciones);
+    classSeccion.addEventListener('change', updateCursos);
+    classCurso.addEventListener('change', updateClases);
+
+    fillSelect(
+        classSedeId,
+        uniqueBy(assignments, item => item.sedeId).map(item => ({ value: item.sedeId, text: item.sede })),
+        'Seleccione sede'
+    );
+
+    btnStart.addEventListener('click', async () => {
+        if (modeSelect.value === 'general' && !generalSedeId.value) {
+            Swal.fire('Atencion', 'Seleccione la sede de entrada.', 'warning');
+            return;
+        }
+
+        if (modeSelect.value === 'clase' && !assignmentSelect.value) {
+            Swal.fire('Atencion', 'Seleccione una clase concreta antes de iniciar.', 'warning');
+            return;
+        }
+
+        try {
+            const videoConstraints = cameraSelect.value ? { deviceId: { exact: cameraSelect.value } } : true;
+            stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
+            video.srcObject = stream;
+            running = true;
+            setStatus(true);
+            btnStart.disabled = true;
+            btnStop.disabled = false;
+            scheduleProcessing();
+        } catch (error) {
+            Swal.fire('Camara no disponible', 'No se pudo acceder a la camara del navegador.', 'error');
+        }
+    });
+
+    btnStop.addEventListener('click', stopRecognition);
+
+    function updateJornadas() {
+        const sedeId = Number(classSedeId.value);
+        const filtered = assignments.filter(item => item.sedeId === sedeId);
+        fillSelect(classJornada, uniqueValues(filtered.map(item => item.jornada)), 'Seleccione jornada');
+        resetSelect(classSeccion, 'Seleccione seccion');
+        resetSelect(classCurso, 'Seleccione curso');
+        resetSelect(assignmentSelect, 'Seleccione clase');
+    }
+
+    function updateSecciones() {
+        const filtered = selectedAssignments({ until: 'jornada' });
+        fillSelect(classSeccion, uniqueValues(filtered.map(item => item.seccion)), 'Seleccione seccion');
+        resetSelect(classCurso, 'Seleccione curso');
+        resetSelect(assignmentSelect, 'Seleccione clase');
+    }
+
+    function updateCursos() {
+        const filtered = selectedAssignments({ until: 'seccion' });
+        fillSelect(
+            classCurso,
+            uniqueBy(filtered, item => item.cursoCodigo).map(item => ({
+                value: item.cursoCodigo,
+                text: `${item.cursoCodigo} - ${item.cursoNombre}`
+            })),
+            'Seleccione curso'
+        );
+        resetSelect(assignmentSelect, 'Seleccione clase');
+    }
+
+    function updateClases() {
+        const filtered = selectedAssignments({ until: 'curso' });
+        fillSelect(
+            assignmentSelect,
+            filtered.map(item => ({ value: item.id, text: item.label })),
+            'Seleccione clase'
+        );
+    }
+
+    function selectedAssignments({ until }) {
+        return assignments.filter(item => {
+            if (!classSedeId.value || item.sedeId !== Number(classSedeId.value)) return false;
+            if (['jornada', 'seccion', 'curso'].includes(until) && classJornada.value && item.jornada !== classJornada.value) return false;
+            if (['seccion', 'curso'].includes(until) && classSeccion.value && item.seccion !== classSeccion.value) return false;
+            if (until === 'curso' && classCurso.value && item.cursoCodigo !== classCurso.value) return false;
+            return true;
+        });
+    }
+
+    function fillSelect(select, items, placeholder) {
+        select.innerHTML = '';
+        select.appendChild(new Option(placeholder, ''));
+        items.forEach(item => {
+            if (typeof item === 'string') {
+                select.appendChild(new Option(item, item));
+            } else {
+                select.appendChild(new Option(item.text, item.value));
+            }
+        });
+        select.disabled = items.length === 0;
+    }
+
+    function resetSelect(select, placeholder) {
+        select.innerHTML = '';
+        select.appendChild(new Option(placeholder, ''));
+        select.disabled = true;
+    }
+
+    function uniqueValues(values) {
+        return [...new Set(values)].sort();
+    }
+
+    function uniqueBy(items, keyFn) {
+        const seen = new Set();
+        return items.filter(item => {
+            const key = keyFn(item);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }
+
+    function scheduleProcessing() {
+        timer = window.setInterval(processFrame, 1500);
+    }
+
+    async function processFrame() {
+        if (!running || processing || video.readyState < 2) return;
+        processing = true;
+
+        const frame = document.createElement('canvas');
+        frame.width = video.videoWidth;
+        frame.height = video.videoHeight;
+        frame.getContext('2d').drawImage(video, 0, 0, frame.width, frame.height);
+
+        try {
+            const response = await fetch('/api/reconocimiento/procesar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image: frame.toDataURL('image/jpeg', 0.82),
+                    mode: modeSelect.value,
+                    sede_id: modeSelect.value === 'general' ? generalSedeId.value : null,
+                    assignment_id: modeSelect.value === 'clase' ? assignmentSelect.value : null
+                })
+            });
+            const result = await response.json();
+            drawDetections(result.recognized || [], frame.width, frame.height);
+        } catch (error) {
+            console.error('No se pudo procesar el frame actual.');
+        } finally {
+            processing = false;
+        }
+    }
+
+    function drawDetections(items, sourceWidth, sourceHeight) {
+        const rect = video.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const scaleX = canvas.width / sourceWidth;
+        const scaleY = canvas.height / sourceHeight;
+
+        items.forEach(item => {
+            if (!item.box) return;
+            const x = item.box.left * scaleX;
+            const y = item.box.top * scaleY;
+            const width = (item.box.right - item.box.left) * scaleX;
+            const height = (item.box.bottom - item.box.top) * scaleY;
+            const color = item.status === 'unknown' ? '#dc3545' : ((item.status === 'not_enrolled' || item.status === 'wrong_sede') ? '#ffc107' : '#198754');
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, width, height);
+            ctx.fillStyle = color;
+            ctx.fillRect(x, Math.max(0, y - 30), Math.max(width, 160), 30);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '14px Arial';
+            ctx.fillText(item.name, x + 8, Math.max(20, y - 10));
+        });
+    }
+
+    function setStatus(isActive) {
+        statusDot.classList.toggle('active', isActive);
+        statusText.textContent = isActive ? 'Activo' : 'Inactivo';
+        statusText.classList.toggle('text-success', isActive);
+        statusText.classList.toggle('text-muted', !isActive);
+    }
+
+    function stopRecognition() {
+        running = false;
+        if (timer) window.clearInterval(timer);
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        setStatus(false);
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+    }
+});
+</script>
+{% endblock %}

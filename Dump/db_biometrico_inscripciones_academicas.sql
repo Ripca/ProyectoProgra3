@@ -18,41 +18,34 @@ USE `db_biometrico`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `asignaciones_catedratico`
+-- Table structure for table `inscripciones_academicas`
 --
 
-DROP TABLE IF EXISTS `asignaciones_catedratico`;
+DROP TABLE IF EXISTS `inscripciones_academicas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `asignaciones_catedratico` (
+CREATE TABLE `inscripciones_academicas` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `curso_id` int NOT NULL,
-  `seccion_id` int NOT NULL,
-  `catedratico_id` int NOT NULL,
-  `salon_id` int NOT NULL,
-  `dia_semana` enum('Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo') NOT NULL,
-  `hora_inicio` time NOT NULL,
-  `hora_fin` time NOT NULL,
+  `persona_id` int NOT NULL,
+  `programacion_academica_id` int NOT NULL,
+  `fecha_inscripcion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `estado` enum('ACTIVO','INACTIVO','RETIRADO') NOT NULL DEFAULT 'ACTIVO',
   PRIMARY KEY (`id`),
-  KEY `curso_id` (`curso_id`),
-  KEY `seccion_id` (`seccion_id`),
-  KEY `catedratico_id` (`catedratico_id`),
-  KEY `salon_id` (`salon_id`),
-  CONSTRAINT `asignaciones_catedratico_ibfk_1` FOREIGN KEY (`curso_id`) REFERENCES `cursos` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `asignaciones_catedratico_ibfk_2` FOREIGN KEY (`seccion_id`) REFERENCES `secciones` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `asignaciones_catedratico_ibfk_3` FOREIGN KEY (`catedratico_id`) REFERENCES `personas` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `asignaciones_catedratico_ibfk_4` FOREIGN KEY (`salon_id`) REFERENCES `salones` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `uq_inscripcion_persona_prog` (`persona_id`,`programacion_academica_id`),
+  KEY `fk_inscripcion_programacion` (`programacion_academica_id`),
+  CONSTRAINT `fk_inscripcion_persona` FOREIGN KEY (`persona_id`) REFERENCES `personas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_inscripcion_programacion` FOREIGN KEY (`programacion_academica_id`) REFERENCES `programacion_academica` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=143 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `asignaciones_catedratico`
+-- Dumping data for table `inscripciones_academicas`
 --
 
-LOCK TABLES `asignaciones_catedratico` WRITE;
-/*!40000 ALTER TABLE `asignaciones_catedratico` DISABLE KEYS */;
-INSERT INTO `asignaciones_catedratico` VALUES (1,1,1,1,1,'Lunes','18:00:00','20:00:00'),(2,1,2,1,2,'Martes','18:00:00','20:00:00'),(3,2,1,2,3,'Miércoles','20:00:00','21:30:00'),(4,3,1,3,5,'Sábado','07:00:00','09:00:00');
-/*!40000 ALTER TABLE `asignaciones_catedratico` ENABLE KEYS */;
+LOCK TABLES `inscripciones_academicas` WRITE;
+/*!40000 ALTER TABLE `inscripciones_academicas` DISABLE KEYS */;
+INSERT INTO `inscripciones_academicas` VALUES (140,67,110,'2026-05-31 00:22:33','ACTIVO'),(141,67,107,'2026-05-31 00:24:07','ACTIVO');
+/*!40000 ALTER TABLE `inscripciones_academicas` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -64,4 +57,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-01 22:38:42
+-- Dump completed on 2026-05-30 20:24:56

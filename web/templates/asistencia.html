@@ -7,7 +7,7 @@
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
                     <div>
                         <h3 class="card-title fw-bold mb-1" style="color: var(--umg-navy);">
                             <i class="bi bi-clipboard-check-fill text-success"></i> {{ data.curso.nombre }}
@@ -19,11 +19,12 @@
                             Horario: <span class="fw-semibold text-primary">{{ data.horario or 'N/A' }}</span> |
                             Fecha: <span class="fw-semibold">{{ data.fecha.strftime('%d/%m/%Y') if data.search_performed else 'Por buscar...' }}</span>
                         </p>
-                    </div>                    <div class="d-flex align-items-center gap-3">
-                        <form method="GET" action="{{ url_for('ver_asistencia', assignment_id=data.assignment.id) }}" class="d-flex align-items-center mb-0">
+                    </div>
+                    <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2">
+                        <form method="GET" action="{{ url_for('ver_asistencia', assignment_id=data.assignment.id) }}" class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 mb-0">
                             <label for="fecha" class="me-2 text-muted mb-0 fw-semibold" style="white-space: nowrap;">Fecha:</label>
-                            <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" value="{{ data.fecha.strftime('%Y-%m-%d') if data.search_performed else '' }}" required style="max-width: 150px;">
-                            <button type="submit" class="btn btn-sm btn-primary ms-2 shadow-sm" style="white-space: nowrap;">
+                            <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" value="{{ data.fecha.strftime('%Y-%m-%d') if data.search_performed else '' }}" required style="max-width: 170px;">
+                            <button type="submit" class="btn btn-sm btn-primary shadow-sm" style="white-space: nowrap;">
                                 <i class="bi bi-search"></i> Buscar Asistencias
                             </button>
                         </form>
@@ -77,15 +78,18 @@
 
     <!-- Action Buttons -->
     <div class="col-12">
-        <div class="d-flex gap-3 justify-content-center">
+        <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
             <a href="{{ url_for('descargar_asistencia', assignment_id=data.assignment.id, fecha=data.fecha.strftime('%Y-%m-%d')) }}" class="btn btn-warning shadow-sm px-4">
                 <i class="bi bi-file-earmark-pdf-fill"></i> Descargar Reporte PDF
             </a>
 
             {% if attendance_confirmed %}
-            <button class="btn btn-secondary px-4 shadow-sm" disabled>
-                <i class="bi bi-shield-check"></i> Asistencia Confirmada
-            </button>
+            <form action="{{ url_for('enviar_asistencia_confirmada', assignment_id=data.assignment.id) }}" method="POST" class="d-inline">
+                <input type="hidden" name="fecha" value="{{ data.fecha.strftime('%Y-%m-%d') }}">
+                <button type="submit" class="btn btn-primary shadow-sm px-4">
+                    <i class="bi bi-send"></i> SOLO ENVIAR
+                </button>
+            </form>
             {% else %}
             <form action="{{ url_for('confirmar_asistencia', assignment_id=data.assignment.id) }}" method="POST" class="d-inline">
                 <input type="hidden" name="fecha" value="{{ data.fecha.strftime('%Y-%m-%d') }}">
@@ -180,7 +184,7 @@
     </div>
     {% else %}
     <div class="col-12 mt-4">
-        <div class="alert alert-info border-0 shadow-sm d-flex align-items-center" style="border-radius: 12px;">
+        <div class="alert alert-info border-0 shadow-sm d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2" style="border-radius: 12px;">
             <i class="bi bi-calendar2-week fs-3 me-3 text-info"></i>
             <div>
                 <h5 class="alert-heading mb-1 fw-bold">Seleccione una fecha</h5>

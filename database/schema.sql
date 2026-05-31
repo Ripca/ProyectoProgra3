@@ -15,11 +15,6 @@ CREATE TABLE IF NOT EXISTS personas (
     role ENUM('admin', 'catedratico', 'estudiante') NOT NULL DEFAULT 'estudiante',
     tipo_persona VARCHAR(50), -- Kept for backward compatibility
     
-    -- Student specific
-    carrera VARCHAR(100),
-    seccion VARCHAR(50),
-    codigo_carnet VARCHAR(50) UNIQUE, -- Nullable for admins? No, everyone should have ID.
-    
     -- Biometrics
     foto_path VARCHAR(255),
     encoding_facial JSON, 
@@ -30,6 +25,28 @@ CREATE TABLE IF NOT EXISTS personas (
     
     -- Auth
     password_hash VARCHAR(255) -- Nullable for students if they don't login
+);
+
+-- Relation tables (Normalized)
+CREATE TABLE IF NOT EXISTS persona_carnets (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    persona_id INT NOT NULL UNIQUE,
+    codigo_carnet VARCHAR(50) NOT NULL UNIQUE,
+    FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS persona_secciones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    persona_id INT NOT NULL UNIQUE,
+    seccion_id INT NOT NULL,
+    FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS persona_carreras (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    persona_id INT NOT NULL UNIQUE,
+    carrera_id INT NOT NULL,
+    FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE CASCADE
 );
 
 -- Table for Courses

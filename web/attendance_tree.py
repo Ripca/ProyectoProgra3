@@ -9,6 +9,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _table_has_column(table_name, column_name):
+    from database.db_manager import DatabaseManager
+
+    rows = DatabaseManager.execute_query(f"SHOW COLUMNS FROM {table_name} LIKE %s", (column_name,))
+    return bool(rows)
+
+
 class AttendanceTree:
     """Generates attendance tree for courses"""
     
@@ -18,7 +25,7 @@ class AttendanceTree:
         Get attendance tree for a specific class assignment
         
         Args:
-            assignment_id: ID from asignaciones_catedratico
+            assignment_id: ID from programacion_academica
             fecha: Date (defaults to today)
         
         Returns:
@@ -34,28 +41,51 @@ class AttendanceTree:
                 return None
             
             # Get enrolled students in THIS course
-            # Note: For now, AsignacionCurso still uses curso_id, 
-            # but ideally should filter by seccion_id if students belong to specific sections
-            estudiantes = AsignacionCursoDAO.get_personas_by_curso(assignment['curso_id'])
+            estudiantes = AsignacionCursoDAO.get_personas_by_curso(assignment_id)
             
-            # Get access logs (biometric or manual) for the classroom today
-            asistencias = AsistenciaClaseDAO.get_by_curso_and_fecha(assignment['curso_id'], fecha)
+            # Get existing confirmed attendance
+            asistencias = AsistenciaClaseDAO.get_by_curso_and_fecha(assignment_id, fecha)
+            from database.models import SesionClaseDAO
+            sesion = SesionClaseDAO.get_by_prog_and_fecha(assignment_id, fecha)
+            finalizada = bool(sesion and sesion.get('estado') == 'FINALIZADA')
             
-            # Create set of student IDs who accessed
+            # Create set of student IDs who are confirmed
             accessed_ids = {a['persona_id'] for a in asistencias}
+            access_times = {a['persona_id']: a['fecha_hora'] for a in asistencias}
             
+            # If not confirmed, get from biometric access logs (registros_acceso)
+            if not asistencias and not finalizada:
+                from database.db_manager import DatabaseManager
+                if _table_has_column('registros_acceso', 'salon_id'):
+                    raw_logs = DatabaseManager.execute_query(
+                        """
+                        SELECT persona_id, MIN(fecha_hora) as min_hora
+                        FROM registros_acceso
+                        WHERE DATE(fecha_hora) = %s AND salon_id = %s
+                        GROUP BY persona_id
+                        """,
+                        (fecha, assignment['salon_id'])
+                    )
+                else:
+                    raw_logs = DatabaseManager.execute_query(
+                        """
+                        SELECT persona_id, MIN(fecha_hora) as min_hora
+                        FROM registros_acceso
+                        WHERE DATE(fecha_hora) = %s
+                          AND observacion LIKE %s
+                        GROUP BY persona_id
+                        """,
+                        (fecha, f"Salón {assignment['salon_codigo']}%")
+                    )
+                if raw_logs:
+                    accessed_ids = {r['persona_id'] for r in raw_logs}
+                    access_times = {r['persona_id']: r['min_hora'] for r in raw_logs}
+
             # Build attendance list
             attendance_list = []
             for estudiante in estudiantes:
                 presente = estudiante['id'] in accessed_ids
-                
-                # Find access time if present
-                access_time = None
-                if presente:
-                    for a in asistencias:
-                        if a['persona_id'] == estudiante['id']:
-                            access_time = a['fecha_hora']
-                            break
+                access_time = access_times.get(estudiante['id'])
                 
                 attendance_list.append({
                     'id': estudiante['id'],
@@ -99,11 +129,11 @@ class AttendanceTree:
             }
             
         except Exception as e:
-            logger.error(f"Error getting course attendance: {e}")
+            logger.error(f"Error getting course attendance: {e}", exc_info=True)
             return None
     
     @staticmethod
-    def get_building_tree(fecha=None):
+    def get_building_tree(fecha=None, sede_id=None):
         """
         Get hierarchical tree of building/floors/classrooms with attendance.
         Shows ALL students assigned to each salon, marking present/absent.
@@ -124,17 +154,29 @@ class AttendanceTree:
             # 1. Get General Access Logs (By Entrance)
             # This uses real data from registros_acceso table
             access_query = """
-                SELECT r.*, p.nombre, p.apellido, p.codigo_carnet, p.foto_path, p.email, p.restriccion_ingreso
+                SELECT r.*, p.nombre, p.apellido, pc.codigo_carnet, p.foto_path, p.email, p.restriccion_ingreso
                 FROM registros_acceso r
                 INNER JOIN personas p ON r.persona_id = p.id
+                LEFT JOIN persona_carnets pc ON p.id = pc.persona_id
                 WHERE DATE(r.fecha_hora) = %s
-                ORDER BY r.fecha_hora DESC
+                  AND r.punto_acceso = 'ENTRADA_PRINCIPAL'
             """
-            access_logs = DatabaseManager.execute_query(access_query, (fecha,))
+            access_params = [fecha]
+            if sede_id and _table_has_column('registros_acceso', 'sede_id'):
+                access_query += " AND r.sede_id = %s"
+                access_params.append(sede_id)
+            access_query += " ORDER BY r.fecha_hora DESC"
+            access_logs = DatabaseManager.execute_query(access_query, tuple(access_params))
             
             # 2. Get Classroom Attendance (Salones)
             # Get all active salons
-            salones = SalonDAO.get_all()
+            if sede_id:
+                salones = DatabaseManager.execute_query(
+                    "SELECT * FROM salones WHERE activo = 1 AND sede_id = %s ORDER BY codigo",
+                    (sede_id,)
+                )
+            else:
+                salones = SalonDAO.get_all()
             logger.info(f"Monitor: found {len(salones) if salones else 0} active salones")
             
             salon_list = []
@@ -142,18 +184,19 @@ class AttendanceTree:
                 # Get all students assigned to courses taught in this salon
                 # LEFT JOIN with attendance to get present/absent status
                 query = """
-                    SELECT DISTINCT p.id, p.nombre, p.apellido, p.foto_path, p.email, p.codigo_carnet, p.restriccion_ingreso,
-                           CASE WHEN ac_att.id IS NOT NULL THEN 1 ELSE 0 END as presente
-                    FROM asignaciones_catedratico acat
-                    INNER JOIN asignaciones_curso acur ON acur.curso_id = acat.curso_id AND acur.estado = 'ACTIVO'
+                    SELECT p.id, p.nombre, p.apellido, p.foto_path, p.email, pc.codigo_carnet, p.restriccion_ingreso,
+                           MAX(CASE WHEN ac_att.id IS NOT NULL THEN 1 ELSE 0 END) as presente
+                    FROM programacion_academica acat
+                    INNER JOIN inscripciones_academicas acur ON acur.programacion_academica_id = acat.id AND acur.estado = 'ACTIVO'
                     INNER JOIN personas p ON p.id = acur.persona_id
-                    LEFT JOIN asistencias_clase ac_att ON ac_att.persona_id = p.id 
-                        AND ac_att.salon_id = %s 
-                        AND DATE(ac_att.fecha_hora) = %s
+                    LEFT JOIN persona_carnets pc ON p.id = pc.persona_id
+                    LEFT JOIN sesiones_clase sc ON sc.programacion_academica_id = acat.id AND sc.fecha = %s
+                    LEFT JOIN asistencias_clase ac_att ON ac_att.persona_id = p.id AND ac_att.sesion_clase_id = sc.id
                     WHERE acat.salon_id = %s
+                    GROUP BY p.id, p.nombre, p.apellido, p.foto_path, p.email, pc.codigo_carnet, p.restriccion_ingreso
                     ORDER BY p.apellido, p.nombre
                 """
-                students = DatabaseManager.execute_query(query, (s['id'], fecha, s['id']))
+                students = DatabaseManager.execute_query(query, (fecha, s['id']))
                 
                 student_list = []
                 if students:

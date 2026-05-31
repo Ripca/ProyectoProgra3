@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil Docente - UMG{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        {% if persona.foto_path %}
+                            <img src="/photos/{{ persona.foto_path.split('\\')[-1] if '\\' in persona.foto_path else persona.foto_path.split('/')[-1] }}"
+                                 alt="Foto del docente" class="rounded-circle" style="width: 86px; height: 86px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                                 style="width: 86px; height: 86px;">
+                                <i class="bi bi-person-badge fs-1 text-primary"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h3 class="fw-bold mb-1" style="color: var(--umg-navy);">{{ persona.nombre }} {{ persona.apellido }}</h3>
+                            <div class="text-muted d-flex flex-wrap gap-2">
+                                {% if persona.email %}<span><i class="bi bi-envelope"></i> {{ persona.email }}</span>{% endif %}
+                                {% if persona.telefono %}<span><i class="bi bi-telephone"></i> {{ persona.telefono }}</span>{% endif %}
+                                {% if persona.tipo_persona_nombre %}<span><i class="bi bi-person-vcard"></i> {{ persona.tipo_persona_nombre }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-2">
+                        <a href="{{ url_for('asignacion_academica', persona_id=persona.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-journal-bookmark"></i> Programacion
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Cursos asignados</div>
+                <div class="display-6 fw-bold text-primary">{{ cursos|length }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Sedes</div>
+                <div class="fw-semibold">{{ sedes|join(', ') if sedes else 'Sin sede' }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Jornadas</div>
+                <div class="fw-semibold">{{ jornadas|join(', ') if jornadas else 'Sin jornada' }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Carreras</div>
+                <div class="fw-semibold">{{ carreras|join(', ') if carreras else 'Sin carrera' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-calendar-week"></i> Cursos asignados</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if cursos %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Curso</th>
+                                <th>Horario</th>
+                                <th>Sede / Salon</th>
+                                <th>Carrera</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in cursos %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ curso.curso_nombre }}</div>
+                                    <div class="small text-muted">{{ curso.curso_codigo }} | Seccion {{ curso.seccion_nombre }}</div>
+                                </td>
+                                <td>
+                                    <div>{{ curso.horario_full }}</div>
+                                    <div class="small text-muted">{{ curso.jornada_nombre }}</div>
+                                </td>
+                                <td>
+                                    <div>{{ curso.sede_nombre }}</div>
+                                    <div class="small text-muted">{{ curso.salon_codigo }}{% if curso.salon_ubicacion %} - {{ curso.salon_ubicacion }}{% endif %}</div>
+                                </td>
+                                <td>{{ curso.carrera_nombre }}</td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('ver_asistencia', assignment_id=curso.assignment_id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-clipboard-check"></i> Asistencia
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                    Este docente aun no tiene cursos asignados.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

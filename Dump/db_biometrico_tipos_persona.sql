@@ -30,7 +30,7 @@ CREATE TABLE `tipos_persona` (
   `descripcion` varchar(150) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,7 +39,7 @@ CREATE TABLE `tipos_persona` (
 
 LOCK TABLES `tipos_persona` WRITE;
 /*!40000 ALTER TABLE `tipos_persona` DISABLE KEYS */;
-INSERT INTO `tipos_persona` VALUES (1,'ESTUDIANTE','Persona que recibe clases'),(2,'CATEDRATICO','Persona que imparte clases'),(3,'ADMINISTRATIVO','Personal administrativo');
+INSERT INTO `tipos_persona` VALUES (1,'ESTUDIANTE','Persona que recibe clases'),(2,'CATEDRATICO','Persona que imparte clases y es responsable de cursos'),(3,'ADMINISTRATIVO','Personal administrativo');
 /*!40000 ALTER TABLE `tipos_persona` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -52,4 +52,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-01 22:38:44
+-- Dump completed on 2026-05-30 20:24:58

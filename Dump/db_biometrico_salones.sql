@@ -26,13 +26,15 @@ DROP TABLE IF EXISTS `salones`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `salones` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `sede_id` int NOT NULL,
   `codigo` varchar(30) NOT NULL,
   `nombre` varchar(100) DEFAULT NULL,
   `ubicacion` varchar(150) DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `codigo` (`codigo`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `uq_salon_sede_codigo` (`sede_id`,`codigo`),
+  CONSTRAINT `fk_salones_sede` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +43,7 @@ CREATE TABLE `salones` (
 
 LOCK TABLES `salones` WRITE;
 /*!40000 ALTER TABLE `salones` DISABLE KEYS */;
-INSERT INTO `salones` VALUES (1,'S1','Salon 1','Primer nivel',1),(2,'S2','Salon 2','Segundo nivel',1),(3,'LAB1','Laboratorio','Edificio B',1),(5,'BM-101','Salón 101','Edificio A',1),(6,'BM-201','Salón 201','Edificio A',1),(7,'LAB-01','Laboratorio Cómputo','Edificio B',1);
+INSERT INTO `salones` VALUES (1,1,'S1','Salon 1','Primer nivel',1),(2,1,'S2','Salon 2','Segundo nivel',1),(3,1,'LAB1','Laboratorio','Edificio B',1),(24,5,'A-101','Aula 101','Primer nivel',1),(25,5,'A-202','Aula 202','Segundo nivel',1),(26,5,'LAB-01','Laboratorio 1','Area tecnologica',1),(27,6,'A-101','Aula 101','Primer nivel',1),(28,6,'A-202','Aula 202','Segundo nivel',1),(29,6,'LAB-01','Laboratorio 1','Area tecnologica',1),(30,7,'A-101','Aula 101','Primer nivel',1),(31,7,'A-202','Aula 202','Segundo nivel',1),(32,7,'LAB-01','Laboratorio 1','Area tecnologica',1),(33,8,'A-101','Aula 101','Primer nivel',1),(34,8,'A-202','Aula 202','Segundo nivel',1),(35,8,'LAB-01','Laboratorio 1','Area tecnologica',1),(36,9,'VIRT-01','Aula Virtual 1','Plataforma virtual',1);
 /*!40000 ALTER TABLE `salones` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -54,4 +56,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-01 22:38:42
+-- Dump completed on 2026-05-30 20:24:56

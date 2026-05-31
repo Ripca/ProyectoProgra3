@@ -29,7 +29,7 @@ CREATE TABLE `secciones` (
   `nombre` varchar(10) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -38,7 +38,7 @@ CREATE TABLE `secciones` (
 
 LOCK TABLES `secciones` WRITE;
 /*!40000 ALTER TABLE `secciones` DISABLE KEYS */;
-INSERT INTO `secciones` VALUES (1,'A'),(2,'B'),(3,'C'),(4,'D'),(5,'E');
+INSERT INTO `secciones` VALUES (1,'A'),(2,'B'),(3,'C'),(6,'D'),(7,'E'),(8,'F');
 /*!40000 ALTER TABLE `secciones` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -51,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-01 22:38:41
+-- Dump completed on 2026-05-30 20:24:56

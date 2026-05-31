@@ -156,12 +156,25 @@ def start_recognition(course_data=None):
                                 last_access = RegistroAccesoDAO.get_recent_by_person(persona_id, minutes=Config.COOLDOWN_MINUTES)
                                 if not last_access:
                                     if course_data:
-                                        # Ensure no duplicate for the same class today
-                                        if not AsistenciaClaseDAO.exists(persona_id, course_data['curso_id'], datetime.now().date()):
+                                        # Get or create session
+                                        assignment_id = course_data['assignment_id']
+                                        hoy = datetime.now().date()
+                                        
+                                        if not AsistenciaClaseDAO.exists(persona_id, assignment_id, hoy):
+                                            from database.models import SesionClaseDAO
+                                            sesion = SesionClaseDAO.get_by_prog_and_fecha(assignment_id, hoy)
+                                            if not sesion:
+                                                sesion_id = SesionClaseDAO.create(
+                                                    assignment_id, hoy, 
+                                                    course_data['hora_inicio'], course_data['hora_fin'], 
+                                                    'EN_CURSO'
+                                                )
+                                            else:
+                                                sesion_id = sesion['id']
+                                                
                                             AsistenciaClaseDAO.create(
+                                                sesion_clase_id=sesion_id,
                                                 persona_id=persona_id,
-                                                curso_id=course_data['curso_id'],
-                                                salon_id=course_data['salon_id'],
                                                 metodo='BIOMETRICO'
                                             )
                                             # Still log general access for cooldown tracking

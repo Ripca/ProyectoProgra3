@@ -49,7 +49,7 @@ class IDCardGenerator:
         # 2. Header Text (White) - Adjusted position to be next to logo
         c.setFillColorRGB(1, 1, 1) # White
         c.setFont("Helvetica-Bold", 11) # Slightly smaller
-        # Center between logo end and card end? Or just fixed offset.
+        # Center between logo end and card end Or just fixed offset.
         # Logo ends at 12mm. 
         c.drawString(14 * mm, card_height - 6 * mm, "UNIVERSIDAD MARIANO GÁLVEZ")
         c.setFont("Helvetica", 7)
@@ -152,7 +152,7 @@ class IDCardGenerator:
         c.setFont("Helvetica", 4)
         c.drawCentredString(sig_x + sig_w/2, sig_y - 2*mm, "FIRMA DEL ALUMNO")
 
-        # 8. Footer Year (Vertical or small corner?)
+        # 8. Footer Year (Vertical or small corner)
         c.setFillColor(UMG_BLUE)
         c.setFont("Helvetica-Bold", 6)
         c.drawRightString(card_width - 3*mm, card_height - header_height - 3*mm, "2025")
